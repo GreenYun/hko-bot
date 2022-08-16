@@ -1,6 +1,8 @@
 // Copyright (c) 2022 GreenYun Organizaiton
 // SPDX-License-identifier: MIT
 
+use std::fmt::Display;
+
 use sqlx::Type;
 use strum::EnumString;
 
@@ -14,12 +16,12 @@ pub enum Lang {
     English,
 }
 
-// impl Display for Lang {
-//     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-//         f.write_str(match self {
-//             Lang::Bilingual => "雙語 Bilingual",
-//             Lang::Chinese => "中文",
-//             Lang::English => "English",
-//         })
-//     }
-// }
+impl Display for Lang {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.write_str(match self {
+            Lang::Bilingual => "雙語 Bilingual",
+            Lang::Chinese => "中文",
+            Lang::English => "English",
+        })
+    }
+}

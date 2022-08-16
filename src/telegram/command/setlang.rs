@@ -90,6 +90,14 @@ where
     respond(())
 }
 
+pub(in super::super) fn setlang_ikb() -> Vec<Vec<InlineKeyboardButton>> {
+    vec![vec![
+        InlineKeyboardButton::callback("雙語\nBilingual", "/setlang bilingual"),
+        InlineKeyboardButton::callback("中文", "/setlang chinese"),
+        InlineKeyboardButton::callback("English", "/setlang english"),
+    ]]
+}
+
 async fn setlang_keyboard(message: Message, bot: AutoSend<Bot>) -> ResponseResult<()> {
     bot.send_message(message.chat.id, statics::SETLANG_QUESTION_BILINGUAL)
         .reply_markup(ReplyMarkup::inline_kb(setlang_ikb()))
@@ -97,12 +105,4 @@ async fn setlang_keyboard(message: Message, bot: AutoSend<Bot>) -> ResponseResul
         .await?;
 
     respond(())
-}
-
-pub(in super::super) fn setlang_ikb() -> Vec<Vec<InlineKeyboardButton>> {
-    vec![vec![
-        InlineKeyboardButton::callback("雙語\nBilingual", "/setlang bilingual"),
-        InlineKeyboardButton::callback("中文", "/setlang chinese"),
-        InlineKeyboardButton::callback("English", "/setlang english"),
-    ]]
 }
