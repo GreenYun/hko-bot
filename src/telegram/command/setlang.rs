@@ -24,18 +24,14 @@ pub(super) async fn setlang(
 ) -> ResponseResult<()> {
     let chat_id = message.chat.id;
 
-    match unwrap_or_excute!(
-        db_conn.select_chat(chat_id.0).await,
-        Err | e | {
-            log::error!("{:?}", e);
-            return respond(());
-        }
-    ) {
+    match unwrap_or_excute!(db_conn.select_chat(chat_id.0).await, |e| {
+        log::error!("{:?}", e);
+        return respond(());
+    }) {
         Some(chat) => {
-            let lang = unwrap_or_excute!(
-                lang.and_then(|lang| Lang::from_str(&lang).ok()),
-                None | | return setlang_keyboard(message, bot.clone()).await
-            );
+            let lang = unwrap_or_excute!(lang.and_then(|lang| Lang::from_str(&lang).ok()), || {
+                return setlang_question(message, bot.clone()).await;
+            });
 
             setlang_internal(lang.clone(), chat, db_conn, || async {
                 bot.send_message(chat_id, match lang {
@@ -72,13 +68,10 @@ where
         let mut chat = chat.clone();
         chat.lang = lang.clone();
 
-        unwrap_or_excute!(
-            db_conn.update_chat(&chat).await,
-            Err | e | {
-                log::error!("{:?}", e);
-                return respond(());
-            }
-        )
+        unwrap_or_excute!(db_conn.update_chat(&chat).await, |e| {
+            log::error!("{:?}", e);
+            return respond(());
+        })
         .rows_affected()
             > 0
     };
@@ -98,7 +91,7 @@ pub(in super::super) fn setlang_ikb() -> Vec<Vec<InlineKeyboardButton>> {
     ]]
 }
 
-async fn setlang_keyboard(message: Message, bot: AutoSend<Bot>) -> ResponseResult<()> {
+async fn setlang_question(message: Message, bot: AutoSend<Bot>) -> ResponseResult<()> {
     bot.send_message(message.chat.id, statics::SETLANG_QUESTION_BILINGUAL)
         .reply_markup(ReplyMarkup::inline_kb(setlang_ikb()))
         .reply_to_message_id(message.id)

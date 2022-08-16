@@ -3,7 +3,11 @@
 
 use std::str::FromStr;
 
-use teloxide::{prelude::*, requests::ResponseResult, types::ParseMode};
+use teloxide::{
+    prelude::*,
+    requests::ResponseResult,
+    types::{InlineKeyboardMarkup, ParseMode},
+};
 
 use crate::{
     database::{types::lang::Lang, Connection},
@@ -27,7 +31,7 @@ pub(super) async fn setlang(
 
     if lang.is_none() {
         bot.edit_message_text(chat_id, message.id, statics::SETLANG_QUESTION_BILINGUAL)
-            .reply_markup(teloxide::types::InlineKeyboardMarkup {
+            .reply_markup(InlineKeyboardMarkup {
                 inline_keyboard: setlang_ikb(),
             })
             .await?;
@@ -35,15 +39,12 @@ pub(super) async fn setlang(
         return respond(());
     }
 
-    let lang = unwrap_or_excute!(Lang::from_str(&lang.unwrap()), Err | _ | return respond(()));
+    let lang = unwrap_or_excute!(Lang::from_str(&lang.unwrap()), |_| return respond(()));
 
-    match unwrap_or_excute!(
-        db_conn.select_chat(chat_id.0).await,
-        Err | e | {
-            log::error!("{:?}", e);
-            return respond(());
-        }
-    ) {
+    match unwrap_or_excute!(db_conn.select_chat(chat_id.0).await, |e| {
+        log::error!("{:?}", e);
+        return respond(());
+    }) {
         Some(chat) => {
             setlang_internal(lang.clone(), chat, db_conn, || async {
                 bot.edit_message_text(chat_id, message.id, match lang {

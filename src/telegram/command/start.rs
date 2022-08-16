@@ -12,13 +12,10 @@ use crate::{
 pub(super) async fn start(message: Message, bot: AutoSend<Bot>, db_conn: Connection) -> ResponseResult<()> {
     let chat_id = message.chat.id;
 
-    if let Some(chat) = unwrap_or_excute!(
-        db_conn.select_chat(chat_id.0).await,
-        Err | e | {
-            log::error!("{:?}", e);
-            return respond(());
-        }
-    ) {
+    if let Some(chat) = unwrap_or_excute!(db_conn.select_chat(chat_id.0).await, |e| {
+        log::error!("{:?}", e);
+        return respond(());
+    }) {
         let zh_text = "喂，老友。";
         let en_text = "Hi, my old friend.";
         bot.send_message(chat_id, match chat.lang {
@@ -43,13 +40,10 @@ pub(super) async fn start(message: Message, bot: AutoSend<Bot>, db_conn: Connect
         lang: lang.clone(),
     };
 
-    unwrap_or_excute!(
-        db_conn.insert_chat(&chat).await,
-        Err | e | {
-            log::error!("{:?}", e);
-            return respond(());
-        }
-    );
+    unwrap_or_excute!(db_conn.insert_chat(&chat).await, |e| {
+        log::error!("{:?}", e);
+        return respond(());
+    });
 
     bot.send_message(chat_id, match lang {
         Lang::Bilingual => unreachable!(),
