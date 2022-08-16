@@ -1,0 +1,66 @@
+// Copyright (c) 2022 GreenYun Organizaiton
+// SPDX-License-identifier: MIT
+
+use std::str::FromStr;
+
+use teloxide::{prelude::*, requests::ResponseResult, types::ParseMode};
+
+use crate::{
+    database::{types::lang::Lang, Connection},
+    macros::unwrap_or_excute,
+    statics,
+    telegram::{misc::start_first, setlang_ikb, setlang_internal},
+};
+
+pub(super) async fn setlang(
+    lang: Option<String>,
+    callback: CallbackQuery,
+    bot: AutoSend<Bot>,
+    db_conn: Connection,
+) -> ResponseResult<()> {
+    if callback.message.is_none() {
+        return respond(());
+    }
+
+    let message = callback.message.unwrap();
+    let chat_id = message.chat.id;
+
+    if lang.is_none() {
+        bot.edit_message_text(chat_id, message.id, statics::SETLANG_QUESTION_BILINGUAL)
+            .reply_markup(teloxide::types::InlineKeyboardMarkup {
+                inline_keyboard: setlang_ikb(),
+            })
+            .await?;
+
+        return respond(());
+    }
+
+    let lang = unwrap_or_excute!(Lang::from_str(&lang.unwrap()), Err | _ | return respond(()));
+
+    match unwrap_or_excute!(
+        db_conn.select_chat(chat_id.0).await,
+        Err | e | {
+            log::error!("{:?}", e);
+            return respond(());
+        }
+    ) {
+        Some(chat) => {
+            setlang_internal(lang.clone(), chat, db_conn, || async {
+                bot.edit_message_text(chat_id, message.id, match lang {
+                    Lang::Bilingual => statics::SETLANG_MESSAGE_BILINGUAL,
+                    Lang::Chinese => statics::SETLANG_MESSAGE_CHINESE,
+                    Lang::English => statics::SETLANG_MESSAGE_ENGLISH,
+                })
+                .parse_mode(ParseMode::Html)
+                .await?;
+
+                respond(())
+            })
+            .await?;
+
+            respond(())
+        }
+
+        None => start_first(bot, chat_id).await,
+    }
+}
