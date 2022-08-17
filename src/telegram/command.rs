@@ -52,12 +52,14 @@ pub fn schema() -> UpdateHandler<RequestError> {
         .branch(command_endpoint!(Command::Help, help))
         .branch(command_endpoint!(Command::Settings, settings))
         .branch(command_endpoint!(Command::Purge, purge))
-        .branch(command_endpoint!(Command::SetLang(lang), setlang)),
+        .branch(command_endpoint!(Command::SetLang(lang), setlang))
+        .branch(command_endpoint!(Command::Briefing, briefing)),
     )
 }
 
 pub(super) use setlang::{setlang_ikb, setlang_internal};
 
+mod briefing;
 mod help;
 mod purge;
 mod setlang;

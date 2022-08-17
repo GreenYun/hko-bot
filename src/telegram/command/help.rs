@@ -5,9 +5,9 @@ use teloxide::{prelude::*, requests::ResponseResult};
 
 use crate::{
     database::{types::lang::Lang, Connection},
-    macros::unwrap_or_excute,
     statics,
     telegram::misc::start_first,
+    tool::macros::unwrap_or_excute,
 };
 
 pub(super) async fn help(message: Message, bot: AutoSend<Bot>, db_conn: Connection) -> ResponseResult<()> {
@@ -25,6 +25,7 @@ pub(super) async fn help(message: Message, bot: AutoSend<Bot>, db_conn: Connecti
             })
             .reply_to_message_id(message.id)
             .await?;
+
             respond(())
         }
 

@@ -11,7 +11,7 @@ macro_rules! unwrap_or_excute {
     ($ex:expr, | | $r:expr $(,)?) => {
         unwrap_or_excute!($ex, || $r)
     };
-    ($ex:expr, | $e:tt | $r:expr $(,)?) => {
+    ($ex:expr, | $e:tt $(,)? | $r:expr $(,)?) => {
         match { $ex } {
             Ok(x) => x,
             Err($e) => $r,

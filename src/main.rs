@@ -10,12 +10,13 @@ async fn main() {
     let db = database::connect(args.db_uri).await;
     let mut tg = telegram::connect(args.bot, db).await;
 
-    tg.dispatch().await;
+    tokio::join!(weather::update(), tg.dispatch());
 }
 
 mod args;
 mod config;
 mod database;
-mod macros;
 mod statics;
 mod telegram;
+mod tool;
+mod weather;

@@ -9,9 +9,9 @@ use teloxide::{
 
 use crate::{
     database::{types::lang::Lang, Connection},
-    macros::unwrap_or_excute,
     statics,
     telegram::misc::start_first,
+    tool::macros::unwrap_or_excute,
 };
 
 pub(super) async fn settings(message: Message, bot: AutoSend<Bot>, db_conn: Connection) -> ResponseResult<()> {

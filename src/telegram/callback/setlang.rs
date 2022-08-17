@@ -11,9 +11,9 @@ use teloxide::{
 
 use crate::{
     database::{types::lang::Lang, Connection},
-    macros::unwrap_or_excute,
     statics,
     telegram::{misc::start_first, setlang_ikb, setlang_internal},
+    tool::macros::unwrap_or_excute,
 };
 
 pub(super) async fn setlang(

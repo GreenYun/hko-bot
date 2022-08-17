@@ -3,7 +3,7 @@
 
 use teloxide::{prelude::*, requests::ResponseResult};
 
-use crate::{database::Connection, macros::unwrap_or_excute, telegram::misc::start_first};
+use crate::{database::Connection, telegram::misc::start_first, tool::macros::unwrap_or_excute};
 
 pub(super) async fn purge(message: Message, bot: AutoSend<Bot>, db_conn: Connection) -> ResponseResult<()> {
     let chat_id = message.chat.id;

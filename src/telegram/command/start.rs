@@ -5,8 +5,8 @@ use teloxide::{prelude::*, requests::ResponseResult, types::ParseMode};
 
 use crate::{
     database::{entities::chat::Chat, types::lang::Lang, Connection},
-    macros::unwrap_or_excute,
     statics,
+    tool::macros::unwrap_or_excute,
 };
 
 pub(super) async fn start(message: Message, bot: AutoSend<Bot>, db_conn: Connection) -> ResponseResult<()> {
