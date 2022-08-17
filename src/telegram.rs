@@ -19,9 +19,9 @@ fn build_with_token<S>(
     Dispatcher<AutoSend<Bot>, RequestError, teloxide::dispatching::DefaultKey>,
 )
 where
-    S: ToString,
+    S: Into<String>,
 {
-    let bot = Bot::new(token.to_string()).auto_send();
+    let bot = Bot::new(token).auto_send();
     let dispatcher = build(bot.clone(), db_conn);
     (bot, dispatcher)
 }
@@ -63,11 +63,11 @@ pub async fn connect<S>(
     db_conn: Connection,
 ) -> Dispatcher<AutoSend<Bot>, RequestError, dispatching::DefaultKey>
 where
-    S: ToString,
+    S: Into<String>,
 {
     log::info!("Connecting to Telegram...");
 
-    let (bot, dispatcher) = build_with_token(token.to_string(), db_conn);
+    let (bot, dispatcher) = build_with_token(token, db_conn);
 
     match bot.get_me().await {
         Ok(me) => log::info!("Connected to Telegram bot {}", me.full_name()),

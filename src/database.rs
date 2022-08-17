@@ -38,7 +38,7 @@ where
 {
     log::info!("Connecting to database...");
 
-    let db = Connection::new(uri.to_string()).await.unwrap_or_else(|e| {
+    let db = Connection::new(uri).await.unwrap_or_else(|e| {
         log::error!("{}", e);
         panic!("{}", e)
     });
