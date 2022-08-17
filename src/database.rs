@@ -15,9 +15,9 @@ pub struct Connection {
 impl Connection {
     pub async fn new<S>(uri: S) -> Result<Self, Error>
     where
-        S: ToString,
+        S: Into<String>,
     {
-        let mut conn_opt: PgConnectOptions = uri.to_string().parse().unwrap_or_else(|e| {
+        let mut conn_opt: PgConnectOptions = uri.into().parse().unwrap_or_else(|e| {
             log::error!("{}", e);
             panic!("{}", e)
         });
@@ -34,7 +34,7 @@ impl Connection {
 
 pub async fn connect<S>(uri: S) -> Connection
 where
-    S: ToString,
+    S: Into<String>,
 {
     log::info!("Connecting to database...");
 
