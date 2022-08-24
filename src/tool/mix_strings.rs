@@ -15,14 +15,27 @@ pub fn mix_strings(list: Vec<BilingualString>, lang: &Lang) -> String {
             continue;
         }
 
-        if matches!(lang, Lang::Chinese) {
-            let _ = writeln!(result, "{}", item.chinese.trim());
-        };
-        if matches!(lang, Lang::Bilingual) {
-            let _ = writeln!(result, "{:x}", item);
-        };
-        if !matches!(lang, Lang::Chinese) {
-            let _ = writeln!(result, "{:e}", item);
+        match lang {
+            Lang::Bilingual => {
+                if !item.chinese.is_empty() {
+                    let _ = writeln!(result, "{:x}", item);
+                }
+                if !item.english.is_empty() {
+                    let _ = writeln!(result, "{:e}", item);
+                }
+            }
+            Lang::Chinese => {
+                if item.chinese.is_empty() {
+                    continue;
+                }
+                let _ = writeln!(result, "{}", item.chinese.trim());
+            }
+            Lang::English => {
+                if item.english.is_empty() {
+                    continue;
+                }
+                let _ = writeln!(result, "{:e}", item);
+            }
         }
 
         let _ = writeln!(result);

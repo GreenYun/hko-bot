@@ -31,6 +31,26 @@ impl WarningPiece {
                 .contents
                 .zip(english.contents)
                 .map(|(c, e)| {
+                    let mut c = c.into_iter().collect::<Vec<_>>();
+                    let mut e = e.into_iter().collect::<Vec<_>>();
+
+                    let c_len = c.len();
+                    let e_len = e.len();
+
+                    match c_len.cmp(&e_len) {
+                        std::cmp::Ordering::Less => {
+                            let mut v = vec![String::new(); e_len - c_len];
+                            v.extend_from_slice(&c);
+                            c = v;
+                        }
+                        std::cmp::Ordering::Equal => {}
+                        std::cmp::Ordering::Greater => {
+                            let mut v = vec![String::new(); c_len - e_len];
+                            v.extend_from_slice(&e);
+                            e = v;
+                        }
+                    }
+
                     c.into_iter()
                         .zip(e.into_iter())
                         .map(|(c, e)| BilingualString::new(c, e))
