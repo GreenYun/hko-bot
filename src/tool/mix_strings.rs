@@ -7,7 +7,7 @@ use crate::database::types::lang::Lang;
 
 use super::types::BilingualString;
 
-pub fn mix_strings(list: Vec<BilingualString>, lang: Lang) -> String {
+pub fn mix_strings(list: Vec<BilingualString>, lang: &Lang) -> String {
     let mut result = String::new();
 
     for item in list {
@@ -15,12 +15,17 @@ pub fn mix_strings(list: Vec<BilingualString>, lang: Lang) -> String {
             continue;
         }
 
-        if !matches!(lang, Lang::English) {
-            let _ = writeln!(result, "{:x}\n", item);
+        if matches!(lang, Lang::Chinese) {
+            let _ = writeln!(result, "{}", item.chinese.trim());
+        };
+        if matches!(lang, Lang::Bilingual) {
+            let _ = writeln!(result, "{:x}", item);
         };
         if !matches!(lang, Lang::Chinese) {
-            let _ = writeln!(result, "{:e}\n", item);
+            let _ = writeln!(result, "{:e}", item);
         }
+
+        let _ = writeln!(result);
     }
 
     result

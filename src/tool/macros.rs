@@ -1,7 +1,7 @@
 // Copyright (c) 2022 GreenYun Organizaiton
 // SPDX-License-identifier: MIT
 
-macro_rules! unwrap_or_excute {
+macro_rules! unwrap_or_execute {
     ($ex:expr, || $r:expr $(,)?) => {
         match { $ex } {
             Some(x) => x,
@@ -9,7 +9,7 @@ macro_rules! unwrap_or_excute {
         }
     };
     ($ex:expr, | | $r:expr $(,)?) => {
-        unwrap_or_excute!($ex, || $r)
+        unwrap_or_execute!($ex, || $r)
     };
     ($ex:expr, | $e:tt $(,)? | $r:expr $(,)?) => {
         match { $ex } {
@@ -19,4 +19,4 @@ macro_rules! unwrap_or_excute {
     };
 }
 
-pub(crate) use unwrap_or_excute;
+pub(crate) use unwrap_or_execute;

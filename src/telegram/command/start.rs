@@ -6,14 +6,14 @@ use teloxide::{prelude::*, requests::ResponseResult, types::ParseMode};
 use crate::{
     database::{entities::chat::Chat, types::lang::Lang, Connection},
     statics,
-    tool::macros::unwrap_or_excute,
+    tool::macros::unwrap_or_execute,
 };
 
 pub(super) async fn start(message: Message, bot: AutoSend<Bot>, db_conn: Connection) -> ResponseResult<()> {
     let chat_id = message.chat.id;
 
-    if let Some(chat) = unwrap_or_excute!(db_conn.select_chat(chat_id.0).await, |e| {
-        log::error!("{:?}", e);
+    if let Some(chat) = unwrap_or_execute!(db_conn.select_chat(chat_id.0).await, |e| {
+        log::error!("{}", e);
         return respond(());
     }) {
         let zh_text = "喂，老友。";
@@ -40,8 +40,8 @@ pub(super) async fn start(message: Message, bot: AutoSend<Bot>, db_conn: Connect
         lang: lang.clone(),
     };
 
-    unwrap_or_excute!(db_conn.insert_chat(&chat).await, |e| {
-        log::error!("{:?}", e);
+    unwrap_or_execute!(db_conn.insert_chat(&chat).await, |e| {
+        log::error!("{}", e);
         return respond(());
     });
 

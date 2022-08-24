@@ -11,6 +11,27 @@ use teloxide::{
 
 use crate::database::Connection;
 
+pub(self) use command::{setlang_ikb, setlang_internal};
+
+pub async fn connect<S>(
+    token: S,
+    db_conn: Connection,
+) -> Dispatcher<AutoSend<Bot>, RequestError, dispatching::DefaultKey>
+where
+    S: Into<String>,
+{
+    log::info!("Connecting to Telegram...");
+
+    let (bot, dispatcher) = build_with_token(token, db_conn);
+
+    match bot.get_me().await {
+        Ok(me) => log::info!("Connected to Telegram bot {}", me.full_name()),
+        Err(e) => log::error!("Connection error: {}", e),
+    };
+
+    dispatcher
+}
+
 fn build_with_token<S>(
     token: S,
     db_conn: Connection,
@@ -37,7 +58,7 @@ fn build(
         .dependencies(dependencies)
         .default_handler(|_| async {})
         .error_handler(Arc::new(|e| async move {
-            log::error!("{:?}", e);
+            log::error!("{}", e);
         }))
         .enable_ctrlc_handler()
         .build()
@@ -57,27 +78,6 @@ fn schema() -> UpdateHandler<RequestError> {
 
     dptree::entry().branch(message_handler).branch(callback_handler)
 }
-
-pub async fn connect<S>(
-    token: S,
-    db_conn: Connection,
-) -> Dispatcher<AutoSend<Bot>, RequestError, dispatching::DefaultKey>
-where
-    S: Into<String>,
-{
-    log::info!("Connecting to Telegram...");
-
-    let (bot, dispatcher) = build_with_token(token, db_conn);
-
-    match bot.get_me().await {
-        Ok(me) => log::info!("Connected to Telegram bot {}", me.full_name()),
-        Err(e) => log::error!("Connection error: {}", e),
-    };
-
-    dispatcher
-}
-
-pub(self) use command::{setlang_ikb, setlang_internal};
 
 mod callback;
 mod command;

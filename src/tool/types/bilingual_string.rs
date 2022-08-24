@@ -26,6 +26,21 @@ impl BilingualString {
     pub fn is_empty(&self) -> bool {
         self.chinese.is_empty() && self.english.is_empty()
     }
+
+    pub fn unzip(self) -> (String, String) {
+        (self.chinese, self.english)
+    }
+
+    pub fn add_single_newline(self) -> Self {
+        if self.is_empty() {
+            return self;
+        }
+
+        Self {
+            chinese: format!("{}\n", self.chinese),
+            english: format!("{}", self.english),
+        }
+    }
 }
 
 impl Add for BilingualString {

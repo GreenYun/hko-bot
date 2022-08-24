@@ -4,7 +4,7 @@
 use chrono::{DateTime, FixedOffset};
 use hko::{common::Lang, fetch, weather::Local};
 
-use crate::tool::{macros::unwrap_or_excute, types::BilingualString};
+use crate::tool::{macros::unwrap_or_execute, types::BilingualString};
 
 use super::briefing;
 
@@ -34,13 +34,13 @@ impl Briefing {
 }
 
 pub async fn update() {
-    let chinese = unwrap_or_excute!(fetch(Lang::TC).await, |e| {
-        log::error!("{:?}", e);
+    let chinese = unwrap_or_execute!(fetch(Lang::TC).await, |e| {
+        log::error!("{}", e);
         return;
     });
 
-    let english = unwrap_or_excute!(fetch(Lang::EN).await, |e| {
-        log::error!("{:?}", e);
+    let english = unwrap_or_execute!(fetch(Lang::EN).await, |e| {
+        log::error!("{}", e);
         return;
     });
 
