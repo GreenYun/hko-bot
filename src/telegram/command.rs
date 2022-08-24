@@ -25,6 +25,7 @@ pub enum Command {
     SetLang(Option<String>),
     Settings,
     Start,
+    Warning,
 }
 
 fn parse_setlang(input: String) -> Result<(Option<String>,), ParseError> {
@@ -47,7 +48,8 @@ pub fn schema() -> UpdateHandler<RequestError> {
         .branch(command_endpoint!(Command::Purge))
         .branch(command_endpoint!(Command::SetLang(lang)))
         .branch(command_endpoint!(Command::Briefing))
-        .branch(command_endpoint!(Command::Bulletin)),
+        .branch(command_endpoint!(Command::Bulletin))
+        .branch(command_endpoint!(Command::Warning)),
     )
 }
 
@@ -60,5 +62,6 @@ mod purge;
 mod setlang;
 mod settings;
 mod start;
+mod warning;
 
 mod macros;

@@ -34,11 +34,11 @@ macro_rules! glob {
             }
         })+
 
-        const COUNT: usize = 3 + count_tt!($($x)+);
+        const COUNT: usize = 2 + count_tt!($($x)+);
     };
 }
 
-glob![briefing, bulletin];
+glob![briefing, bulletin, warning];
 
 pub async fn update() {
     let mutex = Arc::new(Mutex::new(true));
@@ -74,7 +74,7 @@ pub async fn update() {
                 }
 
                 let i = it.next().unwrap();
-                job_select!(i, briefing, bulletin);
+                job_select!(i, briefing, bulletin, warning);
             }
 
             sleep(Duration::from_secs(sleep_sec)).await;
@@ -91,3 +91,6 @@ pub async fn update() {
 
 mod briefing;
 mod bulletin;
+mod warning;
+
+mod macros;

@@ -37,8 +37,8 @@ impl BilingualString {
         }
 
         Self {
-            chinese: format!("{}\n", self.chinese),
-            english: format!("{}", self.english),
+            chinese: self.chinese + "\n",
+            english: self.english,
         }
     }
 }

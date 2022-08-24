@@ -2,11 +2,11 @@
 // SPDX-License-identifier: MIT
 
 use chrono::{DateTime, FixedOffset};
-use hko::{common::Lang, fetch, weather::Current};
+use hko::weather::Current;
 
 use crate::tool::{macros::unwrap_or_execute, types::BilingualString};
 
-use super::bulletin;
+use super::macros::impl_update;
 
 #[derive(Clone, Default)]
 pub struct Bulletin {
@@ -87,22 +87,24 @@ impl Bulletin {
     }
 }
 
-pub async fn update() {
-    let chinese = unwrap_or_execute!(fetch(Lang::TC).await, |e| {
-        log::error!("{}", e);
-        return;
-    });
+// pub async fn update() {
+//     let chinese = unwrap_or_execute!(fetch(Lang::TC).await, |e| {
+//         log::error!("{}", e);
+//         return;
+//     });
 
-    let english = unwrap_or_execute!(fetch(Lang::EN).await, |e| {
-        log::error!("{}", e);
-        return;
-    });
+//     let english = unwrap_or_execute!(fetch(Lang::EN).await, |e| {
+//         log::error!("{}", e);
+//         return;
+//     });
 
-    let b = Bulletin::new(chinese, english);
+//     let b = Bulletin::new(chinese, english);
 
-    {
-        let arc = bulletin();
-        let mut lock = arc.write().await;
-        *lock = b;
-    }
-}
+//     {
+//         let arc = bulletin();
+//         let mut lock = arc.write().await;
+//         *lock = b;
+//     }
+// }
+
+impl_update!(bulletin);

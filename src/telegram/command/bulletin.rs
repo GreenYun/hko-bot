@@ -14,6 +14,7 @@ use crate::{
     tool::{macros::unwrap_or_execute, mix_strings, try_data, types::BilingualString},
     weather,
 };
+
 #[rustfmt::skip]
 macro_rules! ch_num {
     (1) => ("一");

@@ -19,24 +19,27 @@ pub const HELP_MESSAGE_BILINGUAL: &str = r"此機械人將提供來自香港天�
 This bot provides weather information from Hong Kong Observatory.
 
 /help - 查看本幫助訊息 Look for help
-/setlang - 變更你的語言偏好 Change your language preference
-/purge - 清除所有使用者資料 Purge all user data
-/briefing - 提供即時天氣報吿 Get instant weather report
-/bulletin - 提供當前天氣報吿 Get current weather report";
+/settings - 變更偏好設定 Modify preferences
+/purge - 清除所有對話資料 Purge all current chat data
+/briefing - 獲取本港地區天氣預報 Get local weather report
+/bulletin - 獲取當前天氣報吿 Get current weather report
+/warning - 獲取當前由天文台發出的天氣警報資料 Get the warning information from the Observatory";
 pub const HELP_MESSAGE_CHINESE: &str = r"此機械人將提供來自香港天文台的天氣資訊。
 
 /help - 查看本幫助訊息
-/setlang - 變更你的語言偏好
-/purge - 清除所有使用者資料
-/briefing - 提供即時天氣報吿
-/bulletin - 提供當前天氣報吿";
+/setlang - 變更偏好設定
+/purge - 清除所有對話資料
+/briefing - 獲取本港地區天氣預報
+/bulletin - 獲取當前天氣報吿
+/warning - 獲取當前由天文台發出的天氣警報資料";
 pub const HELP_MESSAGE_ENGLISH: &str = r"This bot provides weather information from Hong Kong Observatory.
 
 /help - Look for help
-/setlang - Change your language preference
-/purge - Purge all user data
-/briefing - Get instant weather report
-/bulletin - Get current weather report";
+/settings - Modify preferences
+/purge - Purge all current chat data
+/briefing - Get local weather forecast
+/bulletin - Get current weather report
+/warning - Get the warning information from the Observatory";
 
 // Settings messages
 
