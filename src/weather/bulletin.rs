@@ -12,7 +12,7 @@ use super::macros::impl_update;
 pub struct Bulletin {
     pub temperature: f32,
     pub humidity: f32,
-    pub uv_index: f32,
+    pub uv_index: Option<f32>,
     pub weather_icon: Vec<i32>,
     pub warning: Vec<BilingualString>,
     pub tropical_cyclone: Vec<BilingualString>,
@@ -36,15 +36,11 @@ impl Bulletin {
                 .into_iter()
                 .find_map(|v| v.place.eq("Hong Kong Observatory").then_some(v.value))
                 .unwrap_or_default(),
-            uv_index: english
-                .uv_index
-                .uv_index()
-                .and_then(|v| {
-                    v.data
-                        .into_iter()
-                        .find_map(|v| v.place.eq("King's Park").then_some(v.value))
-                })
-                .unwrap_or_default(),
+            uv_index: english.uv_index.uv_index().and_then(|v| {
+                v.data
+                    .into_iter()
+                    .find_map(|v| v.place.eq("King's Park").then_some(v.value))
+            }),
             weather_icon: chinese.icon.icon,
             warning: chinese
                 .warning_message

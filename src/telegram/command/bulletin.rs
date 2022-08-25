@@ -134,29 +134,42 @@ pub(super) async fn bulletin(message: Message, bot: AutoSend<Bot>, db_conn: Conn
         .map(|n| format!("{:e}", n))
         .collect::<Vec<_>>()
         .join("; ");
-    let uv_desc = uv_desc(bulletin.uv_index);
+    let uv_desc = bulletin.uv_index.map(uv_desc).unwrap_or_default();
 
-    let chi_text1 = format!(
+    let mut chi_text1 = format!(
         "{}香港天文台錄得：\n\
          氣溫：<b>{}</b> 度\n\
          相對濕度：百分之 <b>{}</b>\n\
-         <b>{}</b>\n\n\
-         過去一小時：\n\
-         京士柏錄得的平均紫外線指數：<b>{}</b>\n\
-         紫外線強度屬於<b>{}</b>",
-        chi_hour, bulletin.temperature, bulletin.humidity, chi_weather_desc, bulletin.uv_index, uv_desc.chinese
+         <b>{}</b>",
+        chi_hour, bulletin.temperature, bulletin.humidity, chi_weather_desc,
     );
+    if let Some(uv_index) = bulletin.uv_index {
+        chi_text1 += &format!(
+            "\n\n\
+             過去一小時：\n\
+             京士柏錄得的平均紫外線指數：<b>{}</b>\n\
+             紫外線強度屬於<b>{}</b>",
+            uv_index, uv_desc.chinese
+        );
+    }
 
-    let eng_text1 = format!(
+    let mut eng_text1 = format!(
         "At {} at Hong Kong Observatory:\n\
          Temperature: <b>{}</b> degrees Celsius\n\
          Relative humidity: <b>{}</b> per cent\n\
-         <b>{}</b>\n\n\
-         During the past hour:\n\
-         The mean UV Index recorded at King's Park: <b>{}</b>\n\
-         The intensity of UV radiation is <b>{}</b>",
-        eng_hour, bulletin.temperature, bulletin.humidity, eng_weather_desc, bulletin.uv_index, uv_desc.english
+         <b>{}</b>",
+        eng_hour, bulletin.temperature, bulletin.humidity, eng_weather_desc,
     );
+    if let Some(uv_index) = bulletin.uv_index {
+        eng_text1 += &format!(
+            "\n\n\
+             During the past hour:\n\
+             The mean UV Index recorded at King's Park: <b>{}</b>\n\
+             The intensity of UV radiation is <b>{}</b>",
+            uv_index, uv_desc.english
+        );
+    }
+
     let text1 = BilingualString {
         chinese: chi_text1,
         english: eng_text1,

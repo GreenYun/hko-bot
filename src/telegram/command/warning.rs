@@ -6,7 +6,8 @@ use std::fmt::Write;
 use teloxide::{prelude::*, requests::ResponseResult, types::ParseMode};
 
 use crate::{
-    database::Connection,
+    database::{types::lang::Lang, Connection},
+    statics,
     telegram::misc::start_first,
     tool::{macros::unwrap_or_execute, mix_strings, try_data},
     weather,
@@ -29,6 +30,17 @@ pub(super) async fn warning(message: Message, bot: AutoSend<Bot>, db_conn: Conne
             .await?;
         return respond(());
     });
+
+    if warning.pieces.is_empty() {
+        bot.send_message(chat_id, match &chat.lang {
+            Lang::Bilingual => statics::NO_WARNING_MESSAGE_BILINGUAL,
+            Lang::Chinese => statics::NO_WARNING_MESSAGE_CHINESE,
+            Lang::English => statics::NO_WARNING_MESSAGE_ENGLISH,
+        })
+        .parse_mode(ParseMode::Html)
+        .reply_to_message_id(message.id)
+        .await?;
+    }
 
     for w in warning.pieces {
         let mut list = vec!["<b>".to_owned() + w.name + "</b>"];

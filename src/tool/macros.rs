@@ -2,20 +2,20 @@
 // SPDX-License-identifier: MIT
 
 macro_rules! unwrap_or_execute {
+    ($ex:expr, | $e:tt $(,)? | $r:expr $(,)?) => {
+        match $ex {
+            Ok(x) => x,
+            Err($e) => $r,
+        }
+    };
     ($ex:expr, || $r:expr $(,)?) => {
-        match { $ex } {
+        match $ex {
             Some(x) => x,
             None => $r,
         }
     };
     ($ex:expr, | | $r:expr $(,)?) => {
         unwrap_or_execute!($ex, || $r)
-    };
-    ($ex:expr, | $e:tt $(,)? | $r:expr $(,)?) => {
-        match { $ex } {
-            Ok(x) => x,
-            Err($e) => $r,
-        }
     };
 }
 

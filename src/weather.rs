@@ -3,40 +3,13 @@
 
 use std::{sync::Arc, time::Duration};
 
-use lazy_static::lazy_static;
-use paste::paste;
 use tokio::{
     signal,
     sync::{Mutex, RwLock},
     time::sleep,
 };
 
-macro_rules! count_tt {
-    () => {
-        0usize
-    };
-    ($x:tt $($y:tt)*) => {
-        1 + count_tt!($($y)*)
-    };
-}
-
-macro_rules! glob {
-    [$($x:ident),+ $(,)?] => {
-        $(paste! {
-            lazy_static! {
-                static ref [< $x:upper >]: Arc<RwLock< [< $x:lower >] :: [< $x:camel >] >> = Arc::new(RwLock::new(Default::default()));
-            }
-
-            #[inline]
-            pub fn [< $x:lower >] () -> Arc<RwLock< [< $x:lower >] :: [< $x:camel >] >> {
-                [< $x:upper >]
-                    .clone()
-            }
-        })+
-
-        const COUNT: usize = 2 + count_tt!($($x)+);
-    };
-}
+use macros::{count_tt, glob};
 
 glob![briefing, bulletin, warning];
 

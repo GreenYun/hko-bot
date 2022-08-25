@@ -76,3 +76,12 @@ pub const SETLANG_MESSAGE_ENGLISH: &str = "You will receive <b>English</b> messa
 
 pub const SETLANG_QUESTION_BILINGUAL: &str = r"你想我用何語言發消息？
 What language do you want to receive messages in?";
+
+// No warning messages
+
+pub const NO_WARNING_MESSAGE_BILINGUAL: &str = r"現時並無特別報告。
+There is no special announcement.";
+
+pub const NO_WARNING_MESSAGE_CHINESE: &str = "現時並無特別報告。";
+
+pub const NO_WARNING_MESSAGE_ENGLISH: &str = "There is no special announcement.";
