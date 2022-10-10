@@ -5,7 +5,7 @@ use teloxide::{prelude::*, requests::ResponseResult, types::ParseMode};
 
 use crate::{
     database::{entities::chat::Chat, types::lang::Lang, Connection},
-    statics,
+    statics::{self, GREETINGS_CHINESE, GREETINGS_ENGLISH},
     tool::macros::unwrap_or_execute,
 };
 
@@ -16,12 +16,10 @@ pub(super) async fn start(message: Message, bot: Bot, db_conn: Connection) -> Re
         log::error!("{e}");
         return respond(());
     }) {
-        let zh_text = "喂，老友。";
-        let en_text = "Hi, my old friend.";
         bot.send_message(chat_id, match chat.lang {
-            Lang::Chinese => zh_text.to_owned(),
-            Lang::English => en_text.to_owned(),
-            Lang::Bilingual => format!("{zh_text}\n{en_text}"),
+            Lang::Chinese => GREETINGS_CHINESE.to_owned(),
+            Lang::English => GREETINGS_ENGLISH.to_owned(),
+            Lang::Bilingual => format!("{GREETINGS_CHINESE}\n{GREETINGS_ENGLISH}"),
         })
         .reply_to_message_id(message.id)
         .await?;

@@ -13,6 +13,11 @@ pub const START_MESSAGE_ENGLISH: &str = r"Welcome new user.
 You will receive messages in <b>English</b>, while you can change at any time with /setlang.
 More about the commands, check /help.";
 
+// Greetings
+
+pub const GREETINGS_CHINESE: &str = "喂，老友。";
+pub const GREETINGS_ENGLISH: &str = "Hi, my old friend.";
+
 // Help messages
 
 pub const HELP_MESSAGE_BILINGUAL: &str = r"此機械人將提供來自香港天文台的天氣資訊。
@@ -43,12 +48,12 @@ pub const HELP_MESSAGE_ENGLISH: &str = r"This bot provides weather information f
 
 // Settings messages
 
-pub const SETTINGS_MESSAGE_1_BILINGUAL: &str = r"呢度可以變更偏好設定。
-You can change your preference settings here.";
+pub const SETTINGS_MESSAGE_1_BILINGUAL: &str = r"呢度可以變更以下各項偏好設定。
+You can change your preference settings shown below.";
 
-pub const SETTINGS_MESSAGE_1_CHINESE: &str = r"你可以在這裡變更偏好設定。";
+pub const SETTINGS_MESSAGE_1_CHINESE: &str = r"呢度可以變更以下各項偏好設定。";
 
-pub const SETTINGS_MESSAGE_1_ENGLISH: &str = r"You can change your preference settings here.";
+pub const SETTINGS_MESSAGE_1_ENGLISH: &str = r"You can change your preference settings shown below.";
 
 pub const SETTINGS_MESSAGE_2_BILINGUAL: &str = r"請點下面嘅掣以變更各項設定。
 Please click the following buttons to change each item.";
