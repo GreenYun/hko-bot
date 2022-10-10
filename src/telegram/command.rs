@@ -13,7 +13,7 @@ use teloxide::{
 use macros::command_endpoint;
 
 #[derive(BotCommands, Clone)]
-#[command(rename = "lowercase")]
+#[command(rename_rule = "lowercase")]
 pub enum Command {
     Briefing,
     Bulletin,
@@ -21,13 +21,14 @@ pub enum Command {
     Help,
     Purge,
 
-    #[command(parse_with = "parse_setlang")]
+    #[command(parse_with = parse_setlang)]
     SetLang(Option<String>),
     Settings,
     Start,
     Warning,
 }
 
+#[allow(clippy::unnecessary_wraps)]
 fn parse_setlang(input: String) -> Result<(Option<String>,), ParseError> {
     if input.is_empty() {
         Ok((None,))
@@ -40,7 +41,7 @@ pub fn schema() -> UpdateHandler<RequestError> {
     dptree::entry().branch(
         dptree::filter_map(move |message: Message, me: Me| {
             let bot_name = me.user.username.unwrap_or_default();
-            message.text().and_then(|text| Command::parse(text, bot_name).ok())
+            message.text().and_then(|text| Command::parse(text, &bot_name).ok())
         })
         .branch(command_endpoint!(Command::Start))
         .branch(command_endpoint!(Command::Help))

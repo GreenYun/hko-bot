@@ -34,7 +34,7 @@ impl Args {
                 "--help" => usage_then_exit(0),
                 "--version" => {
                     println!(concat!(env!("CARGO_PKG_NAME"), " ", env!("CARGO_PKG_VERSION")));
-                    process::exit(0)
+                    process::exit(0);
                 }
 
                 // Bot token
@@ -43,7 +43,7 @@ impl Args {
                         .next()
                         .unwrap_or_else(|| usage_then_exit(1))
                         .to_string_lossy()
-                        .into_owned()
+                        .into_owned();
                 }
 
                 // Database URI
@@ -52,7 +52,7 @@ impl Args {
                         .next()
                         .unwrap_or_else(|| usage_then_exit(1))
                         .to_string_lossy()
-                        .into_owned()
+                        .into_owned();
                 }
 
                 _ => usage_then_exit(1),
@@ -89,10 +89,10 @@ fn usage(mut w: impl io::Write) -> io::Result<()> {
 }
 
 fn usage_then_exit(exit_val: i32) -> ! {
-    if exit_val != 0 {
-        usage(io::stderr())
-    } else {
+    if exit_val == 0 {
         usage(io::stdout())
+    } else {
+        usage(io::stderr())
     }
     .unwrap();
 

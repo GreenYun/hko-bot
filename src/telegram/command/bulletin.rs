@@ -69,6 +69,8 @@ const fn english_hour(pm: bool, hour12: u32) -> &'static str {
 }
 
 fn uv_desc(i: f32) -> BilingualString {
+    #[allow(clippy::cast_possible_truncation)]
+    #[allow(clippy::cast_sign_loss)]
     let i = i as u32;
     match i {
         0..=2 => BilingualString {
@@ -94,10 +96,11 @@ fn uv_desc(i: f32) -> BilingualString {
     }
 }
 
-pub(super) async fn bulletin(message: Message, bot: AutoSend<Bot>, db_conn: Connection) -> ResponseResult<()> {
+#[allow(clippy::too_many_lines)]
+pub(super) async fn bulletin(message: Message, bot: Bot, db_conn: Connection) -> ResponseResult<()> {
     let chat_id = message.chat.id;
     let chat = unwrap_or_execute!(db_conn.select_chat(chat_id.0).await, |e| {
-        log::error!("{}", e);
+        log::error!("{e}");
         return respond(());
     });
     let chat = unwrap_or_execute!(chat, || {
@@ -126,47 +129,47 @@ pub(super) async fn bulletin(message: Message, bot: AutoSend<Bot>, db_conn: Conn
         .collect::<Vec<_>>();
     let chi_weather_desc = weather_desc
         .iter()
-        .map(|n| format!("{:o}", n))
+        .map(|n| format!("{n:o}"))
         .collect::<Vec<_>>()
         .join("；");
     let eng_weather_desc = weather_desc
         .iter()
-        .map(|n| format!("{:e}", n))
+        .map(|n| format!("{n:e}"))
         .collect::<Vec<_>>()
         .join("; ");
     let uv_desc = bulletin.uv_index.map(uv_desc).unwrap_or_default();
 
     let mut chi_text1 = format!(
-        "{}香港天文台錄得：\n\
+        "{chi_hour}香港天文台錄得：\n\
          氣溫：<b>{}</b> 度\n\
          相對濕度：百分之 <b>{}</b>\n\
-         <b>{}</b>",
-        chi_hour, bulletin.temperature, bulletin.humidity, chi_weather_desc,
+         <b>{chi_weather_desc}</b>",
+        bulletin.temperature, bulletin.humidity,
     );
     if let Some(uv_index) = bulletin.uv_index {
         chi_text1 += &format!(
             "\n\n\
              過去一小時：\n\
-             京士柏錄得的平均紫外線指數：<b>{}</b>\n\
+             京士柏錄得的平均紫外線指數：<b>{uv_index}</b>\n\
              紫外線強度屬於<b>{}</b>",
-            uv_index, uv_desc.chinese
+            uv_desc.chinese
         );
     }
 
     let mut eng_text1 = format!(
-        "At {} at Hong Kong Observatory:\n\
+        "At {eng_hour} at Hong Kong Observatory:\n\
          Temperature: <b>{}</b> degrees Celsius\n\
          Relative humidity: <b>{}</b> per cent\n\
-         <b>{}</b>",
-        eng_hour, bulletin.temperature, bulletin.humidity, eng_weather_desc,
+         <b>{eng_weather_desc}</b>",
+        bulletin.temperature, bulletin.humidity,
     );
     if let Some(uv_index) = bulletin.uv_index {
         eng_text1 += &format!(
             "\n\n\
              During the past hour:\n\
-             The mean UV Index recorded at King's Park: <b>{}</b>\n\
+             The mean UV Index recorded at King's Park: <b>{uv_index}</b>\n\
              The intensity of UV radiation is <b>{}</b>",
-            uv_index, uv_desc.english
+            uv_desc.english
         );
     }
 
@@ -205,7 +208,7 @@ pub(super) async fn bulletin(message: Message, bot: AutoSend<Bot>, db_conn: Conn
         vec![
             text1.add_single_newline(),
             if special_tips.is_empty() {
-                Default::default()
+                BilingualString::default()
             } else {
                 BilingualString::new(
                     "<b>特別天氣提示：</b>".to_owned(),
@@ -214,7 +217,7 @@ pub(super) async fn bulletin(message: Message, bot: AutoSend<Bot>, db_conn: Conn
             },
             special_tips.add_single_newline(),
             if warning.is_empty() {
-                Default::default()
+                BilingualString::default()
             } else {
                 BilingualString::new(
                     "<b>請注意：</b>".to_owned(),

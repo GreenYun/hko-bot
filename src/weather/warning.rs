@@ -9,20 +9,20 @@ use crate::tool::{macros::unwrap_or_execute, types::BilingualString};
 use super::macros::impl_update;
 
 #[derive(Clone, Default)]
-pub struct WarningPiece {
+pub struct Piece {
     pub name: BilingualString,
     pub contents: Vec<BilingualString>,
     pub update_time: DateTime<FixedOffset>,
 }
 
-impl WarningPiece {
+impl Piece {
     pub fn new(chinese: InfoDetail, english: InfoDetail) -> Self {
         let mut chinese_name = format!("{:o}", chinese.code);
         let mut english_name = format!("{:e}", english.code);
 
         if let Some(code) = chinese.subtype {
-            chinese_name.push_str(&format!("：{:o}", code));
-            english_name.push_str(&format!(": {:e}", code));
+            chinese_name.push_str(&format!("：{code:o}"));
+            english_name.push_str(&format!(": {code:e}"));
         }
 
         Self {
@@ -64,7 +64,7 @@ impl WarningPiece {
 
 #[derive(Clone, Default)]
 pub struct Warning {
-    pub pieces: Vec<WarningPiece>,
+    pub pieces: Vec<Piece>,
 }
 
 impl Warning {
@@ -76,7 +76,7 @@ impl Warning {
                 .map(|(c, e)| {
                     c.into_iter()
                         .zip(e.into_iter())
-                        .map(|(c, e)| WarningPiece::new(c, e))
+                        .map(|(c, e)| Piece::new(c, e))
                         .collect()
                 })
                 .unwrap_or_default(),

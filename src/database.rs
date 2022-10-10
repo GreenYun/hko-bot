@@ -15,11 +15,11 @@ pub struct Connection {
 impl Connection {
     pub async fn new<S>(uri: S) -> Result<Self, Error>
     where
-        S: Into<String>,
+        S: Into<String> + Send + Sync,
     {
         let mut conn_opt: PgConnectOptions = uri.into().parse().unwrap_or_else(|e| {
-            log::error!("{}", e);
-            panic!("{}", e)
+            log::error!("{e}");
+            panic!("{e}")
         });
 
         conn_opt
@@ -34,13 +34,13 @@ impl Connection {
 
 pub async fn connect<S>(uri: S) -> Connection
 where
-    S: Into<String>,
+    S: Into<String> + Send + Sync,
 {
     log::info!("Connecting to database...");
 
     let db = Connection::new(uri).await.unwrap_or_else(|e| {
-        log::error!("{}", e);
-        panic!("{}", e)
+        log::error!("{e}");
+        panic!("{e}");
     });
 
     let db_name: String = sqlx::query("SELECT current_database()")
@@ -49,7 +49,7 @@ where
         .unwrap()
         .try_get(0)
         .unwrap_or_default();
-    log::info!("Connected to database {}", db_name);
+    log::info!("Connected to database {db_name}");
 
     db
 }

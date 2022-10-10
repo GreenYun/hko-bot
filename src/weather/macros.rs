@@ -38,12 +38,12 @@ macro_rules! impl_update {
             use crate::tool::macros::unwrap_or_execute;
 
             let chinese = unwrap_or_execute!(fetch(Lang::TC).await, |e| {
-                log::error!("{}", e);
+                log::error!("{e}");
                 return;
             });
 
             let english = unwrap_or_execute!(fetch(Lang::EN).await, |e| {
-                log::error!("{}", e);
+                log::error!("{e}");
                 return;
             });
 

@@ -19,7 +19,7 @@ use crate::{
 pub(super) async fn setlang(
     lang: Option<String>,
     callback: CallbackQuery,
-    bot: AutoSend<Bot>,
+    bot: Bot,
     db_conn: Connection,
 ) -> ResponseResult<()> {
     if callback.message.is_none() {
@@ -41,7 +41,7 @@ pub(super) async fn setlang(
 
     let lang = unwrap_or_execute!(Lang::from_str(&lang.unwrap()), |_| return respond(()));
     let chat = unwrap_or_execute!(db_conn.select_chat(chat_id.0).await, |e| {
-        log::error!("{}", e);
+        log::error!("{e}");
         return respond(());
     });
     let chat = unwrap_or_execute!(chat, || {

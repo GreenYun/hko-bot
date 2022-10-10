@@ -54,7 +54,7 @@ pub async fn update() {
         }
     });
 
-    let _ = signal::ctrl_c().await;
+    std::mem::drop(signal::ctrl_c().await);
 
     let mut m = mutex.lock().await;
     *m = false;

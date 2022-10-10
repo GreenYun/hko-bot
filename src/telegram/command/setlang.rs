@@ -19,13 +19,13 @@ use crate::{
 pub(super) async fn setlang(
     lang: Option<String>,
     message: Message,
-    bot: AutoSend<Bot>,
+    bot: Bot,
     db_conn: Connection,
 ) -> ResponseResult<()> {
     let chat_id = message.chat.id;
 
     let chat = unwrap_or_execute!(db_conn.select_chat(chat_id.0).await, |e| {
-        log::error!("{}", e);
+        log::error!("{e}");
         return respond(());
     });
     let chat = unwrap_or_execute!(chat, || {
@@ -68,7 +68,7 @@ where
         chat.lang = lang.clone();
 
         unwrap_or_execute!(db_conn.update_chat(&chat).await, |e| {
-            log::error!("{}", e);
+            log::error!("{e}");
             return respond(());
         })
         .rows_affected()
@@ -90,7 +90,7 @@ pub(in super::super) fn setlang_ikb() -> Vec<Vec<InlineKeyboardButton>> {
     ]]
 }
 
-async fn setlang_question(message: Message, bot: AutoSend<Bot>) -> ResponseResult<()> {
+async fn setlang_question(message: Message, bot: Bot) -> ResponseResult<()> {
     bot.send_message(message.chat.id, statics::SETLANG_QUESTION_BILINGUAL)
         .reply_markup(ReplyMarkup::inline_kb(setlang_ikb()))
         .reply_to_message_id(message.id)

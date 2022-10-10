@@ -33,24 +33,4 @@ impl Briefing {
     }
 }
 
-// pub async fn update() {
-//     let chinese = unwrap_or_execute!(fetch(Lang::TC).await, |e| {
-//         log::error!("{}", e);
-//         return;
-//     });
-
-//     let english = unwrap_or_execute!(fetch(Lang::EN).await, |e| {
-//         log::error!("{}", e);
-//         return;
-//     });
-
-//     let b = Briefing::new(chinese, english);
-
-//     {
-//         let arc = briefing();
-//         let mut lock = arc.write().await;
-//         *lock = b;
-//     }
-// }
-
 impl_update!(briefing);

@@ -7,9 +7,9 @@ use tokio::{sync::RwLock, time};
 
 pub async fn try_data<T, F, P>(f: F, pred: P) -> Option<T>
 where
-    T: Clone,
-    F: Fn() -> Arc<RwLock<T>>,
-    P: Fn(&T) -> bool,
+    T: Clone + Send + Sync,
+    F: Fn() -> Arc<RwLock<T>> + Send,
+    P: Fn(&T) -> bool + Send,
 {
     const MAX_RETRY: usize = 3;
 

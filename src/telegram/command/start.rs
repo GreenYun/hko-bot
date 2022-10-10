@@ -9,11 +9,11 @@ use crate::{
     tool::macros::unwrap_or_execute,
 };
 
-pub(super) async fn start(message: Message, bot: AutoSend<Bot>, db_conn: Connection) -> ResponseResult<()> {
+pub(super) async fn start(message: Message, bot: Bot, db_conn: Connection) -> ResponseResult<()> {
     let chat_id = message.chat.id;
 
     if let Some(chat) = unwrap_or_execute!(db_conn.select_chat(chat_id.0).await, |e| {
-        log::error!("{}", e);
+        log::error!("{e}");
         return respond(());
     }) {
         let zh_text = "喂，老友。";
@@ -21,7 +21,7 @@ pub(super) async fn start(message: Message, bot: AutoSend<Bot>, db_conn: Connect
         bot.send_message(chat_id, match chat.lang {
             Lang::Chinese => zh_text.to_owned(),
             Lang::English => en_text.to_owned(),
-            Lang::Bilingual => format!("{}\n{}", zh_text, en_text),
+            Lang::Bilingual => format!("{zh_text}\n{en_text}"),
         })
         .reply_to_message_id(message.id)
         .await?;
@@ -41,7 +41,7 @@ pub(super) async fn start(message: Message, bot: AutoSend<Bot>, db_conn: Connect
     };
 
     unwrap_or_execute!(db_conn.insert_chat(&chat).await, |e| {
-        log::error!("{}", e);
+        log::error!("{e}");
         return respond(());
     });
 

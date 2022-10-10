@@ -13,12 +13,9 @@ use crate::database::Connection;
 
 pub(self) use command::{setlang_ikb, setlang_internal};
 
-pub async fn connect<S>(
-    token: S,
-    db_conn: Connection,
-) -> Dispatcher<AutoSend<Bot>, RequestError, dispatching::DefaultKey>
+pub async fn connect<S>(token: S, db_conn: Connection) -> Dispatcher<Bot, RequestError, dispatching::DefaultKey>
 where
-    S: Into<String>,
+    S: Into<String> + Send + Sync,
 {
     log::info!("Connecting to Telegram...");
 
@@ -26,7 +23,7 @@ where
 
     match bot.get_me().await {
         Ok(me) => log::info!("Connected to Telegram bot {}", me.full_name()),
-        Err(e) => log::error!("Connection error: {}", e),
+        Err(e) => log::error!("Connection error: {e}"),
     };
 
     dispatcher
@@ -35,22 +32,16 @@ where
 fn build_with_token<S>(
     token: S,
     db_conn: Connection,
-) -> (
-    AutoSend<Bot>,
-    Dispatcher<AutoSend<Bot>, RequestError, teloxide::dispatching::DefaultKey>,
-)
+) -> (Bot, Dispatcher<Bot, RequestError, teloxide::dispatching::DefaultKey>)
 where
     S: Into<String>,
 {
-    let bot = Bot::new(token).auto_send();
+    let bot = Bot::new(token);
     let dispatcher = build(bot.clone(), db_conn);
     (bot, dispatcher)
 }
 
-fn build(
-    bot: AutoSend<Bot>,
-    db_conn: Connection,
-) -> Dispatcher<AutoSend<Bot>, RequestError, teloxide::dispatching::DefaultKey> {
+fn build(bot: Bot, db_conn: Connection) -> Dispatcher<Bot, RequestError, teloxide::dispatching::DefaultKey> {
     let mut dependencies = DependencyMap::new();
     dependencies.insert(db_conn);
 
@@ -58,7 +49,7 @@ fn build(
         .dependencies(dependencies)
         .default_handler(|_| async {})
         .error_handler(Arc::new(|e| async move {
-            log::error!("{}", e);
+            log::error!("{e}");
         }))
         .enable_ctrlc_handler()
         .build()
@@ -67,12 +58,10 @@ fn build(
 fn schema() -> UpdateHandler<RequestError> {
     let message_handler = Update::filter_message()
         .branch(command::schema())
-        .branch(
-            Message::filter_text().endpoint(|m: Message, b: AutoSend<Bot>| async move {
-                b.send_message(m.chat.id, "Hi").await?;
-                respond(())
-            }),
-        );
+        .branch(Message::filter_text().endpoint(|m: Message, b: Bot| async move {
+            b.send_message(m.chat.id, "Hi").await?;
+            respond(())
+        }));
 
     let callback_handler = Update::filter_callback_query().branch(callback::schema());
 

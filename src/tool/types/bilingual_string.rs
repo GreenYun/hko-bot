@@ -27,6 +27,7 @@ impl BilingualString {
         self.chinese.is_empty() && self.english.is_empty()
     }
 
+    #[allow(clippy::missing_const_for_fn)]
     pub fn unzip(self) -> (String, String) {
         (self.chinese, self.english)
     }

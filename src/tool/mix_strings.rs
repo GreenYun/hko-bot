@@ -18,10 +18,10 @@ pub fn mix_strings(list: Vec<BilingualString>, lang: &Lang) -> String {
         match lang {
             Lang::Bilingual => {
                 if !item.chinese.is_empty() {
-                    let _ = writeln!(result, "{:x}", item);
+                    let _ = writeln!(result, "{item:x}");
                 }
                 if !item.english.is_empty() {
-                    let _ = writeln!(result, "{:e}", item);
+                    let _ = writeln!(result, "{item:e}");
                 }
             }
             Lang::Chinese => {
@@ -34,7 +34,7 @@ pub fn mix_strings(list: Vec<BilingualString>, lang: &Lang) -> String {
                 if item.english.is_empty() {
                     continue;
                 }
-                let _ = writeln!(result, "{:e}", item);
+                let _ = writeln!(result, "{item:e}");
             }
         }
 

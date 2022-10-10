@@ -6,10 +6,7 @@ use std::io::Write;
 use log::LevelFilter;
 
 pub fn logging() {
-    let level = match std::env::var_os("HKO_BOT_DEBUG")
-        .map(|s| s.to_string_lossy().parse::<u64>().unwrap_or(0))
-        .unwrap_or(3)
-    {
+    let level = match std::env::var_os("HKO_BOT_DEBUG").map_or(3, |s| s.to_string_lossy().parse::<u64>().unwrap_or(0)) {
         0 => LevelFilter::Off,
         1 => LevelFilter::Error,
         2 => LevelFilter::Warn,
@@ -37,7 +34,7 @@ pub fn logging() {
                 Level::Trace => style.set_color(Color::Magenta).value("TRACE"),
             };
 
-            writeln!(buf, "\r{} {} {}", timestamp, level, record.args())
+            writeln!(buf, "\r{timestamp} {level} {}", record.args())
         })
         .write_style(env_logger::fmt::WriteStyle::Auto)
         .filter_level(level)

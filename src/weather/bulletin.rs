@@ -83,24 +83,4 @@ impl Bulletin {
     }
 }
 
-// pub async fn update() {
-//     let chinese = unwrap_or_execute!(fetch(Lang::TC).await, |e| {
-//         log::error!("{}", e);
-//         return;
-//     });
-
-//     let english = unwrap_or_execute!(fetch(Lang::EN).await, |e| {
-//         log::error!("{}", e);
-//         return;
-//     });
-
-//     let b = Bulletin::new(chinese, english);
-
-//     {
-//         let arc = bulletin();
-//         let mut lock = arc.write().await;
-//         *lock = b;
-//     }
-// }
-
 impl_update!(bulletin);

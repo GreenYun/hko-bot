@@ -19,9 +19,9 @@ pub enum Lang {
 impl Display for Lang {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         f.write_str(match self {
-            Lang::Bilingual => "雙語 Bilingual",
-            Lang::Chinese => "中文",
-            Lang::English => "English",
+            Self::Bilingual => "雙語 Bilingual",
+            Self::Chinese => "中文",
+            Self::English => "English",
         })
     }
 }
