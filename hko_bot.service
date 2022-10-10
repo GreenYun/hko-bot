@@ -1,0 +1,16 @@
+[Unit]
+Description=Hong Kong Observatory Bot
+Wants=network.target
+Requires=postgresql.service
+
+[Service]
+Type=simple
+ExitType=main
+Restart=always
+RestartSec=5
+Environment="HKO_BOT_TOKEN=<Your Bot Token>"
+Environment="HKO_BOT_DATABASE_URI=<Your Database Connection String>"
+ExecStart=-/usr/local/bin/hko-bot
+
+[Install]
+WantedBy=multi-user.target
