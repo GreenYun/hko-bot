@@ -45,7 +45,7 @@ const fn chinese_hour(pm: bool, hour12: u32) -> &'static str {
     fmt_hour! {"午夜" | false in [12]}
     fmt_hour! {"凌晨" | false in [1 2 3 4 5]}
     fmt_hour! {"上午" | false in [6 7 8 9 10 11]}
-    fmt_hour! {"中午" | true in [12]}
+    fmt_hour! {"正午" | true in [12]}
     fmt_hour! {"下午" | true in [1 2 3 4 5]}
     fmt_hour! {"傍晚" | true in [6]}
     fmt_hour! {"晚上" | true in [7 8 9 10 11]}
