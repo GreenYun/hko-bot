@@ -13,13 +13,14 @@ pub struct BilingualString {
 }
 
 impl BilingualString {
+    #[allow(clippy::needless_pass_by_value)]
     pub fn new<S>(chinese: S, english: S) -> Self
     where
-        S: Into<String>,
+        S: ToString,
     {
         Self {
-            chinese: chinese.into(),
-            english: english.into(),
+            chinese: chinese.to_string(),
+            english: english.to_string(),
         }
     }
 

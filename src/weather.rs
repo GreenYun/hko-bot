@@ -1,12 +1,12 @@
 // Copyright (c) 2022 GreenYun Organizaiton
 // SPDX-License-identifier: MIT
 
-use std::{sync::Arc, time::Duration};
+use std::{mem, sync::Arc};
 
 use tokio::{
     signal,
     sync::{Mutex, RwLock},
-    time::sleep,
+    time::{sleep, Duration},
 };
 
 use macros::{count_tt, glob};
@@ -14,50 +14,37 @@ use macros::{count_tt, glob};
 glob![briefing, bulletin, warning];
 
 pub async fn update() {
-    let mutex = Arc::new(Mutex::new(true));
+    let mutex = Arc::new(Mutex::new(false));
     let thread_mutex = mutex.clone();
 
     tokio::spawn(async move {
-        let mut sleep_sec = 0;
-        let mut it = (0..COUNT).into_iter().cycle();
-
-        macro_rules! job_select {
-            ($i:expr, $x:ident $(, $others:ident)* $(,)?) => {
-                match $i {
-                    x if x == (count_tt!($($others)*)) => {
-                        $x::update().await;
-                    }
-                    _ => {
-                        job_select!($i, $($others,)*);
-                    }
-                }
-            };
-            ($i:expr $(,)?) => {
-                sleep_sec = 60 / (COUNT as u64);
-            }
+        for updater in all_updaters {
+            updater().await.ok();
         }
 
+        let mut it = all_updaters.into_iter().cycle();
+
         loop {
-            {
-                let mutex = thread_mutex.lock().await;
-
-                if !*mutex {
+            match thread_mutex.lock().await {
+                dead if *dead => {
                     log::info!("weather updater is shutdown");
-                    break;
+                    return;
                 }
-
-                let i = it.next().unwrap();
-                job_select!(i, briefing, bulletin, warning);
+                _mutex_guard => {
+                    if let Some(f) = it.next() {
+                        f().await.ok();
+                    };
+                }
             }
 
-            sleep(Duration::from_secs(sleep_sec)).await;
+            sleep(Duration::from_secs(60 / (COUNT as u64))).await;
         }
     });
 
-    std::mem::drop(signal::ctrl_c().await);
+    mem::drop(signal::ctrl_c().await);
 
-    let mut m = mutex.lock().await;
-    *m = false;
+    let mut dead = mutex.lock().await;
+    *dead = true;
 
     log::info!("Weather updater shutdown signal sent.");
 }

@@ -47,7 +47,7 @@ pub(super) async fn warning(message: Message, bot: Bot, db_conn: Connection) -> 
         list.extend_from_slice(&w.contents);
 
         let mut text = mix_strings(list, &chat.lang);
-        let _ = write!(text, "<i>@ {}</i>", w.update_time);
+        write!(text, "<i>@ {}</i>", w.update_time).ok();
 
         bot.send_message(chat_id, text)
             .parse_mode(ParseMode::Html)

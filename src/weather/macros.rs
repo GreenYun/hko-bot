@@ -23,9 +23,19 @@ macro_rules! glob {
                 [<$x:upper>]
                     .clone()
             }
+
+            #[allow(non_upper_case_globals)]
+            const [<$x:lower _updater>]: fn() -> tokio::task::JoinHandle<()> = || {
+                tokio::spawn([<$x:lower>]::update())
+            };
         })+
 
-        const COUNT: usize = 2 + $crate::weather::macros::count_tt!($($x)+);
+        const COUNT: usize = $crate::weather::macros::count_tt!($($x)+);
+
+        #[allow(non_upper_case_globals)]
+        const all_updaters: [&fn() -> tokio::task::JoinHandle<()>; COUNT] = [
+            $(::paste::paste!(&[<$x:lower _updater>])),+
+        ];
     };
 }
 

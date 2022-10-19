@@ -50,7 +50,7 @@ pub(super) async fn briefing(message: Message, bot: Bot, db_conn: Connection) ->
         &chat.lang,
     );
 
-    let _ = write!(text, "<i>@ {}</i>", briefing.update_time);
+    write!(text, "<i>@ {}</i>", briefing.update_time).ok();
 
     bot.send_message(chat_id, text)
         .parse_mode(ParseMode::Html)

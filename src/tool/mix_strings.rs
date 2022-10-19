@@ -18,27 +18,27 @@ pub fn mix_strings(list: Vec<BilingualString>, lang: &Lang) -> String {
         match lang {
             Lang::Bilingual => {
                 if !item.chinese.is_empty() {
-                    let _ = writeln!(result, "{item:x}");
+                    writeln!(result, "{item:x}").ok();
                 }
                 if !item.english.is_empty() {
-                    let _ = writeln!(result, "{item:e}");
+                    writeln!(result, "{item:e}").ok();
                 }
             }
             Lang::Chinese => {
                 if item.chinese.is_empty() {
                     continue;
                 }
-                let _ = writeln!(result, "{}", item.chinese.trim());
+                writeln!(result, "{}", item.chinese.trim()).ok();
             }
             Lang::English => {
                 if item.english.is_empty() {
                     continue;
                 }
-                let _ = writeln!(result, "{item:e}");
+                writeln!(result, "{item:e}").ok();
             }
         }
 
-        let _ = writeln!(result);
+        writeln!(result).ok();
     }
 
     result
