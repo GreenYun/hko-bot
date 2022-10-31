@@ -1,17 +1,16 @@
 // Copyright (c) 2022 GreenYun Organizaiton
 // SPDX-License-identifier: MIT
 
-use std::{mem, sync::Arc};
+use std::sync::Arc;
 
 use tokio::{
     signal,
     sync::{Mutex, RwLock},
+    task::JoinHandle,
     time::{sleep, Duration},
 };
 
-use macros::{count_tt, glob};
-
-glob![briefing, bulletin, warning];
+macros::glob![COUNT; all_updaters; briefing, bulletin, warning];
 
 pub async fn update() {
     let mutex = Arc::new(Mutex::new(false));
@@ -41,7 +40,9 @@ pub async fn update() {
         }
     });
 
-    mem::drop(signal::ctrl_c().await);
+    if let Err(e) = signal::ctrl_c().await {
+        log::error!("failed to listen for ctrl-c: {}", e);
+    }
 
     let mut dead = mutex.lock().await;
     *dead = true;

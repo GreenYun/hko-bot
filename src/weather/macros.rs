@@ -6,12 +6,12 @@ macro_rules! count_tt {
         0usize
     };
     ($x:tt $($y:tt)*) => {
-        1 + count_tt!($($y)*)
+        1 + $crate::weather::macros::count_tt!($($y)*)
     };
 }
 
 macro_rules! glob {
-    [$($x:ident),+ $(,)?] => {
+    [$count:ident; $all_updaters:ident; $($x:ident),+ $(,)?] => {
         $(::paste::paste! {
             ::lazy_static::lazy_static! {
                 static ref [<$x:upper>]: Arc<RwLock<[<$x:lower>]::[<$x:camel>]>>
@@ -20,22 +20,20 @@ macro_rules! glob {
 
             #[inline]
             pub fn [<$x:lower>]() -> Arc<RwLock<[<$x:lower>]::[<$x:camel>]>> {
-                [<$x:upper>]
-                    .clone()
+                [<$x:upper>].clone()
             }
 
             #[allow(non_upper_case_globals)]
-            const [<$x:lower _updater>]: fn() -> tokio::task::JoinHandle<()> = || {
+            const [<$x:lower _ updater>]: fn() -> JoinHandle<()> = || {
                 tokio::spawn([<$x:lower>]::update())
             };
         })+
 
-        const COUNT: usize = $crate::weather::macros::count_tt!($($x)+);
+        #[allow(non_upper_case_globals)]
+        const $count: usize = $crate::weather::macros::count_tt!($($x)+);
 
         #[allow(non_upper_case_globals)]
-        const all_updaters: [&fn() -> tokio::task::JoinHandle<()>; COUNT] = [
-            $(::paste::paste!(&[<$x:lower _updater>])),+
-        ];
+        const $all_updaters: [&fn() -> JoinHandle<()>; $count] = [$(::paste::paste!(&[<$x:lower _ updater>])),+];
     };
 }
 

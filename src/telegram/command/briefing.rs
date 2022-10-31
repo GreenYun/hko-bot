@@ -41,7 +41,7 @@ pub(super) async fn briefing(message: Message, bot: Bot, db_conn: Connection) ->
                 + briefing.forecast_period
                 + "</b>\n"
                 + briefing.forecast_desc
-                + BilingualString::new("\n展望", "\n")
+                + BilingualString::new("\n展望", "\nOutlook: ")
                 + briefing.outlook)
                 .add_single_newline(),
             briefing.tc_info.add_single_newline(),
