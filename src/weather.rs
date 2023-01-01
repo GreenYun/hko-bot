@@ -5,23 +5,29 @@ use std::sync::Arc;
 
 use tokio::{
     signal,
-    sync::{Mutex, RwLock},
-    task::JoinHandle,
+    sync::Mutex,
     time::{sleep, Duration},
 };
 
-macros::glob![COUNT; all_updaters; briefing, bulletin, warning];
+macros::glob! {
+    fn briefing;
+    fn bulletin;
+    fn warning;
+    const ALL_UPDATERS: [&Updater; COUNT];
+}
 
 pub async fn update() {
+    const UPDATE_PERIOD: u64 = 300;
+
     let mutex = Arc::new(Mutex::new(false));
     let thread_mutex = mutex.clone();
 
     tokio::spawn(async move {
-        for updater in all_updaters {
+        for updater in ALL_UPDATERS {
             updater().await.ok();
         }
 
-        let mut it = all_updaters.into_iter().cycle();
+        let mut it = ALL_UPDATERS.into_iter().cycle();
 
         loop {
             match thread_mutex.lock().await {
@@ -36,7 +42,7 @@ pub async fn update() {
                 }
             }
 
-            sleep(Duration::from_secs(60 / (COUNT as u64))).await;
+            sleep(Duration::from_secs(UPDATE_PERIOD / (COUNT as u64))).await;
         }
     });
 

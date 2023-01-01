@@ -3,7 +3,7 @@
 
 macro_rules! count_tt {
     () => {
-        0usize
+        0
     };
     ($x:tt $($y:tt)*) => {
         1 + $crate::weather::macros::count_tt!($($y)*)
@@ -11,29 +11,39 @@ macro_rules! count_tt {
 }
 
 macro_rules! glob {
-    [$count:ident; $all_updaters:ident; $($x:ident),+ $(,)?] => {
+    {
+        $(fn $x:ident;)+
+        const $all_updaters:ident: [&$updater_type:ident; $count:ident];
+    } => {
         $(::paste::paste! {
             ::lazy_static::lazy_static! {
-                static ref [<$x:upper>]: Arc<RwLock<[<$x:lower>]::[<$x:camel>]>>
-                    = Arc::new(RwLock::new(Default::default()));
+                static ref [<__ $x:upper>]: ::std::sync::Arc<::tokio::sync::RwLock<[<$x:lower>]::[<$x:camel>]>> =
+                    ::std::sync::Arc::new(::tokio::sync::RwLock::new(Default::default()));
             }
 
             #[inline]
-            pub fn [<$x:lower>]() -> Arc<RwLock<[<$x:lower>]::[<$x:camel>]>> {
-                [<$x:upper>].clone()
+            pub fn [<$x:lower>]() -> ::std::sync::Arc<::tokio::sync::RwLock<[<$x:lower>]::[<$x:camel>]>> {
+                [<__ $x:upper>].clone()
             }
-
-            #[allow(non_upper_case_globals)]
-            const [<$x:lower _ updater>]: fn() -> JoinHandle<()> = || {
-                tokio::spawn([<$x:lower>]::update())
-            };
         })+
+
+        type $updater_type = fn() -> ::tokio::task::JoinHandle<()>;
 
         #[allow(non_upper_case_globals)]
         const $count: usize = $crate::weather::macros::count_tt!($($x)+);
 
         #[allow(non_upper_case_globals)]
-        const $all_updaters: [&fn() -> JoinHandle<()>; $count] = [$(::paste::paste!(&[<$x:lower _ updater>])),+];
+        const $all_updaters: [&$updater_type; $count] = {
+            ::paste::paste! {
+                $(
+                    const [<$x:lower _ updater>]: $updater_type = || {
+                        tokio::spawn([<$x:lower>]::update())
+                    };
+                )+
+
+                [$(&[<$x:lower _ updater>]),+]
+            }
+        };
     };
 }
 
