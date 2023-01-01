@@ -1,4 +1,4 @@
-// Copyright (c) 2022 GreenYun Organizaiton
+// Copyright (c) 2022 GreenYun Organization
 // SPDX-License-identifier: MIT
 
 macro_rules! command_endpoint {

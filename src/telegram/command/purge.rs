@@ -1,4 +1,4 @@
-// Copyright (c) 2022 GreenYun Organizaiton
+// Copyright (c) 2022 GreenYun Organization
 // SPDX-License-identifier: MIT
 
 use teloxide::{prelude::*, requests::ResponseResult};

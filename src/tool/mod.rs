@@ -1,4 +1,4 @@
-// Copyright (c) 2022 GreenYun Organizaiton
+// Copyright (c) 2022 GreenYun Organization
 // SPDX-License-identifier: MIT
 
 pub use mix_strings::mix_strings;
