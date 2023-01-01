@@ -1,7 +1,6 @@
 // Copyright (c) 2022 GreenYun Organization
 // SPDX-License-identifier: MIT
 
-use paste::paste;
 use teloxide::{
     dispatching::UpdateHandler,
     prelude::*,
