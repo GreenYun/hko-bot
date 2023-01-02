@@ -15,8 +15,16 @@ pub fn logging() {
         _ => LevelFilter::Trace,
     };
 
+    let is_display_time = match std::env::var_os("HKO_BOT_TIME").map(|s| {
+        let s = s.to_string_lossy();
+        s.is_empty() || s.to_ascii_lowercase() == "false" || s == "0"
+    }) {
+        Some(true) => true,
+        None | Some(false) => false,
+    };
+
     env_logger::builder()
-        .format(|buf, record| {
+        .format(move |buf, record| {
             use env_logger::fmt::Color;
             use log::Level;
 
@@ -34,7 +42,11 @@ pub fn logging() {
                 Level::Trace => style.set_color(Color::Magenta).value("TRACE"),
             };
 
-            writeln!(buf, "\r{timestamp} {level} {}", record.args())
+            if is_display_time {
+                writeln!(buf, "\r{timestamp} {level} {}", record.args())
+            } else {
+                writeln!(buf, "\r{level} {}", record.args())
+            }
         })
         .write_style(env_logger::fmt::WriteStyle::Auto)
         .filter_level(level)

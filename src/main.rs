@@ -3,6 +3,8 @@
 
 #[tokio::main]
 async fn main() {
+    println!(concat!(env!("CARGO_PKG_NAME"), " ", env!("CARGO_PKG_VERSION")));
+
     let args = args::Args::new();
 
     config::logging();
