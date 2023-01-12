@@ -56,14 +56,8 @@ fn build(bot: Bot, db_conn: Connection) -> Dispatcher<Bot, RequestError, teloxid
 }
 
 fn schema() -> UpdateHandler<RequestError> {
-    let message_handler = Update::filter_message()
-        .branch(command::schema())
-        .branch(Message::filter_text().endpoint(|m: Message, b: Bot| async move {
-            b.send_message(m.chat.id, "Hi").await?;
-            respond(())
-        }));
-
     let callback_handler = Update::filter_callback_query().branch(callback::schema());
+    let message_handler = Update::filter_message().branch(command::schema());
 
     dptree::entry().branch(message_handler).branch(callback_handler)
 }

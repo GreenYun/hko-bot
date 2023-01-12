@@ -6,6 +6,7 @@ Requires=postgresql.service
 [Service]
 Type=simple
 ExitType=main
+KillSignal=SIGINT
 Restart=always
 RestartSec=5
 Environment="HKO_BOT_TOKEN=<Your Bot Token>"
