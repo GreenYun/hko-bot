@@ -1,5 +1,5 @@
-// Copyright (c) 2022 GreenYun Organization
-// SPDX-License-identifier: MIT
+// Copyright (c) 2022 - 2023 GreenYun Organization
+// SPDX-License-Identifier: MIT
 
 use std::{future::Future, str::FromStr};
 
@@ -13,7 +13,6 @@ use crate::{
     database::{entities::chat::Chat, types::lang::Lang, Connection},
     statics,
     telegram::misc::start_first,
-    tool::macros::unwrap_or_execute,
 };
 
 pub(super) async fn setlang(
@@ -23,18 +22,23 @@ pub(super) async fn setlang(
     db_conn: Connection,
 ) -> ResponseResult<()> {
     let chat_id = message.chat.id;
+    let chat = match db_conn.select_chat(chat_id.0).await {
+        Ok(chat) => {
+            let Some(chat) = chat else {
+                return start_first(bot, chat_id).await;
+            };
 
-    let chat = unwrap_or_execute!(db_conn.select_chat(chat_id.0).await, |e| {
-        log::error!("{e}");
-        return respond(());
-    });
-    let chat = unwrap_or_execute!(chat, || {
-        return start_first(bot, chat_id).await;
-    });
+            chat
+        }
+        Err(e) => {
+            log::error!("{e}");
+            return respond(());
+        }
+    };
 
-    let lang = unwrap_or_execute!(lang.and_then(|lang| Lang::from_str(&lang).ok()), || {
+    let Some(lang) = lang.and_then(|lang| Lang::from_str(&lang).ok()) else {
         return setlang_question(message, bot.clone()).await;
-    });
+    };
 
     setlang_internal(lang.clone(), chat, db_conn, || async {
         bot.send_message(chat_id, match lang {
@@ -67,12 +71,13 @@ where
         let mut chat = chat.clone();
         chat.lang = lang.clone();
 
-        unwrap_or_execute!(db_conn.update_chat(&chat).await, |e| {
-            log::error!("{e}");
-            return respond(());
-        })
-        .rows_affected()
-            > 0
+        match db_conn.update_chat(&chat).await {
+            Ok(res) => res.rows_affected() > 0,
+            Err(e) => {
+                log::error!("{e}");
+                return respond(());
+            }
+        }
     };
 
     if success {

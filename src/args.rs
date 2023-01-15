@@ -1,5 +1,5 @@
-// Copyright (c) 2022 GreenYun Organization
-// SPDX-License-identifier: MIT
+// Copyright (c) 2022 - 2023 GreenYun Organization
+// SPDX-License-Identifier: MIT
 
 use std::{env, io, process};
 

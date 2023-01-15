@@ -1,10 +1,10 @@
-// Copyright (c) 2022 GreenYun Organization
-// SPDX-License-identifier: MIT
+// Copyright (c) 2022 - 2023 GreenYun Organization
+// SPDX-License-Identifier: MIT
 
 use chrono::{DateTime, FixedOffset};
 use hko::weather::{warning::info::InfoDetail, Info};
 
-use crate::tool::{macros::unwrap_or_execute, types::BilingualString};
+use crate::tool::types::BilingualString;
 
 use super::macros::impl_update;
 

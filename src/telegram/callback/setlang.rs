@@ -1,5 +1,5 @@
-// Copyright (c) 2022 GreenYun Organization
-// SPDX-License-identifier: MIT
+// Copyright (c) 2022 - 2023 GreenYun Organization
+// SPDX-License-Identifier: MIT
 
 use std::str::FromStr;
 
@@ -13,7 +13,6 @@ use crate::{
     database::{types::lang::Lang, Connection},
     statics,
     telegram::{misc::start_first, setlang_ikb, setlang_internal},
-    tool::macros::unwrap_or_execute,
 };
 
 pub(super) async fn setlang(
@@ -39,14 +38,23 @@ pub(super) async fn setlang(
         return respond(());
     }
 
-    let lang = unwrap_or_execute!(Lang::from_str(&lang.unwrap()), |_| return respond(()));
-    let chat = unwrap_or_execute!(db_conn.select_chat(chat_id.0).await, |e| {
-        log::error!("{e}");
-        return respond(());
-    });
-    let chat = unwrap_or_execute!(chat, || {
-        return start_first(bot, chat_id).await;
-    });
+    let Ok(lang) = Lang::from_str(&lang.unwrap()) else {
+        return respond(())
+    };
+
+    let chat = match db_conn.select_chat(chat_id.0).await {
+        Ok(chat) => {
+            let Some(chat) = chat else {
+                return start_first(bot, chat_id).await;
+            };
+
+            chat
+        }
+        Err(e) => {
+            log::error!("{e}");
+            return respond(());
+        }
+    };
 
     setlang_internal(lang.clone(), chat, db_conn, || async {
         bot.edit_message_text(chat_id, message.id, match lang {

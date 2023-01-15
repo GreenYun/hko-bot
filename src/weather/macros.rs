@@ -1,5 +1,5 @@
-// Copyright (c) 2022 GreenYun Organization
-// SPDX-License-identifier: MIT
+// Copyright (c) 2022 - 2023 GreenYun Organization
+// SPDX-License-Identifier: MIT
 
 macro_rules! count_tt {
     () => {
@@ -53,17 +53,21 @@ macro_rules! impl_update {
             use hko::{common::Lang, fetch};
             use paste::paste;
 
-            use crate::tool::macros::unwrap_or_execute;
+            let chinese = match fetch(Lang::TC).await {
+                Ok(data) => data,
+                Err(e) => {
+                    log::error!("{e}");
+                    return;
+                }
+            };
 
-            let chinese = unwrap_or_execute!(fetch(Lang::TC).await, |e| {
-                log::error!("{e}");
-                return;
-            });
-
-            let english = unwrap_or_execute!(fetch(Lang::EN).await, |e| {
-                log::error!("{e}");
-                return;
-            });
+            let english = match fetch(Lang::EN).await {
+                Ok(data) => data,
+                Err(e) => {
+                    log::error!("{e}");
+                    return;
+                }
+            };
 
             paste! { let b = [< $self:camel >] ::new(chinese, english); }
 
