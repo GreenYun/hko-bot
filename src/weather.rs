@@ -30,15 +30,13 @@ pub async fn update() {
         let mut it = ALL_UPDATERS.into_iter().cycle();
 
         loop {
-            match thread_mutex.lock().await {
-                dead if *dead => {
+            {
+                let mutex_guard = thread_mutex.lock().await;
+                if *mutex_guard {
                     log::info!("weather updater is shutdown");
                     return;
-                }
-                _mutex_guard => {
-                    if let Some(f) = it.next() {
-                        f().await.ok();
-                    };
+                } else if let Some(f) = it.next() {
+                    f().await.ok();
                 }
             }
 
@@ -50,8 +48,10 @@ pub async fn update() {
         log::error!("failed to listen for ctrl-c: {}", e);
     }
 
-    let mut dead = mutex.lock().await;
-    *dead = true;
+    {
+        let mut dead = mutex.lock().await;
+        *dead = true;
+    }
 
     log::info!("Weather updater shutdown signal sent.");
 }

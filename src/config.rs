@@ -23,10 +23,25 @@ pub fn logging() {
         None | Some(false) => false,
     };
 
+    let is_journal = !atty::is(atty::Stream::Stdout);
+
     env_logger::builder()
         .format(move |buf, record| {
             use env_logger::fmt::Color;
             use log::Level;
+
+            if is_journal {
+                let level = 3 * 8
+                    + match record.level() {
+                        Level::Error => 3,
+                        Level::Warn => 4,
+                        Level::Info => 5,
+                        Level::Debug => 6,
+                        Level::Trace => 7,
+                    };
+
+                return writeln!(buf, "<{level}> {}", record.args());
+            }
 
             let mut style = buf.style();
             let timestamp = style
