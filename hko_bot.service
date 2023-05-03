@@ -9,6 +9,7 @@ ExitType=main
 KillSignal=SIGINT
 Restart=always
 RestartSec=5
+EnvironmentFile=/etc/default/hko-bot
 Environment="HKO_BOT_TOKEN=<Your Bot Token>"
 Environment="HKO_BOT_DATABASE_URI=<Your Database Connection String>"
 ExecStart=-/usr/local/bin/hko-bot
