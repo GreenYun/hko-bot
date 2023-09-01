@@ -3,7 +3,7 @@
 
 use std::fmt::Write;
 
-use teloxide::{prelude::*, requests::ResponseResult, types::ParseMode};
+use teloxide::{prelude::*, requests::ResponseResult, types::ParseMode, ApiError, RequestError};
 
 use crate::{
     database::{types::lang::Lang, Connection},
@@ -51,13 +51,33 @@ pub(super) async fn warning(message: Message, bot: Bot, db_conn: Connection) -> 
         let mut list = vec!["<b>".to_owned() + w.name + "</b>"];
         list.extend_from_slice(&w.contents);
 
-        let mut text = mix_strings(list, &chat.lang);
+        let mut text = mix_strings(&list, &chat.lang);
         write!(text, "<i>@ {}</i>", w.update_time).ok();
 
-        bot.send_message(chat_id, text)
+        let send = bot
+            .send_message(chat_id, text)
             .parse_mode(ParseMode::Html)
             .reply_to_message_id(message.id)
-            .await?;
+            .await;
+
+        match send {
+            Ok(_) => {}
+            Err(RequestError::Api(ApiError::MessageIsTooLong)) => {
+                if matches!(chat.lang, Lang::Bilingual) {
+                    bot.send_message(chat_id, mix_strings(&list, &Lang::Chinese))
+                        .parse_mode(ParseMode::Html)
+                        .reply_to_message_id(message.id)
+                        .await?;
+                    bot.send_message(chat_id, mix_strings(&list, &Lang::English))
+                        .parse_mode(ParseMode::Html)
+                        .reply_to_message_id(message.id)
+                        .await?;
+                }
+            }
+            Err(e) => {
+                return Err(e);
+            }
+        }
     }
 
     respond(())

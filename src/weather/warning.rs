@@ -51,10 +51,7 @@ impl Piece {
                         }
                     }
 
-                    c.into_iter()
-                        .zip(e.into_iter())
-                        .map(|(c, e)| BilingualString::new(c, e))
-                        .collect()
+                    c.into_iter().zip(e).map(|(c, e)| BilingualString::new(c, e)).collect()
                 })
                 .unwrap_or_default(),
             update_time: chinese.update_time.unwrap_or_default(),
@@ -73,12 +70,7 @@ impl Warning {
             pieces: chinese
                 .details
                 .zip(english.details)
-                .map(|(c, e)| {
-                    c.into_iter()
-                        .zip(e.into_iter())
-                        .map(|(c, e)| Piece::new(c, e))
-                        .collect()
-                })
+                .map(|(c, e)| c.into_iter().zip(e).map(|(c, e)| Piece::new(c, e)).collect())
                 .unwrap_or_default(),
         }
     }

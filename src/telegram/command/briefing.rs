@@ -32,7 +32,8 @@ pub(super) async fn briefing(message: Message, bot: Bot, db_conn: Connection) ->
     let Some(briefing) = try_data(weather::briefing, |v| {
         (Utc::now().naive_utc() - v.update_time.naive_utc()).num_days() <= 1
     })
-    .await else {
+    .await
+    else {
         bot.send_message(chat_id, "Connection timed out, please try again later.")
             .reply_to_message_id(message.id)
             .await?;
@@ -40,7 +41,7 @@ pub(super) async fn briefing(message: Message, bot: Bot, db_conn: Connection) ->
     };
 
     let mut text = mix_strings(
-        vec![
+        &[
             briefing.general_situation.add_single_newline(),
             ("<b>".to_owned()
                 + briefing.forecast_period

@@ -116,7 +116,8 @@ pub(super) async fn bulletin(message: Message, bot: Bot, db_conn: Connection) ->
     let Some(bulletin) = try_data(weather::bulletin, |v| {
         (Utc::now().naive_utc() - v.update_time.naive_utc()).num_days() <= 1
     })
-    .await else {
+    .await
+    else {
         bot.send_message(chat_id, "Connection timed out, please try again later.")
             .reply_to_message_id(message.id)
             .await?;
@@ -195,7 +196,7 @@ pub(super) async fn bulletin(message: Message, bot: Bot, db_conn: Connection) ->
         english: eng_special_tips,
     };
 
-    let warning = mix_strings(bulletin.warning, &chat.lang);
+    let warning = mix_strings(&bulletin.warning, &chat.lang);
 
     let (chi_tc, eng_tc) = bulletin
         .tropical_cyclone
@@ -210,7 +211,7 @@ pub(super) async fn bulletin(message: Message, bot: Bot, db_conn: Connection) ->
     };
 
     let mut text = mix_strings(
-        vec![
+        &[
             text1.add_single_newline(),
             if special_tips.is_empty() {
                 BilingualString::default()
@@ -234,7 +235,7 @@ pub(super) async fn bulletin(message: Message, bot: Bot, db_conn: Connection) ->
     );
     text += &warning;
     text += &mix_strings(
-        vec![
+        &[
             tropical_cyclone.add_single_newline(),
             bulletin.rainstorm_reminder.add_single_newline(),
         ],

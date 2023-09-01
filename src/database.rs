@@ -17,12 +17,13 @@ impl Connection {
     where
         S: Into<String> + Send + Sync,
     {
-        let mut conn_opt: PgConnectOptions = uri.into().parse().unwrap_or_else(|e| {
-            log::error!("{e}");
-            panic!("{e}")
-        });
-
-        conn_opt
+        let conn_opt = uri
+            .into()
+            .parse::<PgConnectOptions>()
+            .unwrap_or_else(|e| {
+                log::error!("{e}");
+                panic!("{e}")
+            })
             .log_statements(LevelFilter::Debug)
             .log_slow_statements(LevelFilter::Debug, std::time::Duration::default());
 

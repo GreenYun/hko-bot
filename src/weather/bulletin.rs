@@ -45,22 +45,12 @@ impl Bulletin {
             warning: chinese
                 .warning_message
                 .zip(english.warning_message)
-                .map(|(c, e)| {
-                    c.into_iter()
-                        .zip(e.into_iter())
-                        .map(|(c, e)| BilingualString::new(c, e))
-                        .collect()
-                })
+                .map(|(c, e)| c.into_iter().zip(e).map(|(c, e)| BilingualString::new(c, e)).collect())
                 .unwrap_or_default(),
             tropical_cyclone: chinese
                 .tcmessage
                 .zip(english.tcmessage)
-                .map(|(c, e)| {
-                    c.into_iter()
-                        .zip(e.into_iter())
-                        .map(|(c, e)| BilingualString::new(c, e))
-                        .collect()
-                })
+                .map(|(c, e)| c.into_iter().zip(e).map(|(c, e)| BilingualString::new(c, e)).collect())
                 .unwrap_or_default(),
             rainstorm_reminder: {
                 chinese
@@ -71,12 +61,7 @@ impl Bulletin {
             special_tips: chinese
                 .special_tips
                 .zip(english.special_tips)
-                .map(|(c, e)| {
-                    c.into_iter()
-                        .zip(e.into_iter())
-                        .map(|(c, e)| BilingualString::new(c, e))
-                        .collect()
-                })
+                .map(|(c, e)| c.into_iter().zip(e).map(|(c, e)| BilingualString::new(c, e)).collect())
                 .unwrap_or_default(),
             update_time: chinese.update_time,
         }

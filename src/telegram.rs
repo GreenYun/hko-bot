@@ -11,7 +11,7 @@ use teloxide::{
 
 use crate::database::Connection;
 
-pub(self) use command::{setlang_ikb, setlang_internal};
+use command::{setlang_ikb, setlang_internal};
 
 pub async fn connect<S>(token: S, db_conn: Connection) -> Dispatcher<Bot, RequestError, dispatching::DefaultKey>
 where

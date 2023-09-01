@@ -7,7 +7,7 @@ use crate::database::types::lang::Lang;
 
 use super::types::BilingualString;
 
-pub fn mix_strings(list: Vec<BilingualString>, lang: &Lang) -> String {
+pub fn mix_strings(list: &[BilingualString], lang: &Lang) -> String {
     let mut result = String::new();
 
     for item in list {
