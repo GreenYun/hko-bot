@@ -14,7 +14,7 @@ log = "0.4"
 num-traits = "0.2"
 paste = "^1"
 sqlx = {version = "^0.7", features = ["chrono", "macros", "postgres", "runtime-tokio-native-tls"], default-features = false}
-strum = {version = "^0.25", features = ["derive"]}
+strum = {version = ">=0.24", features = ["derive"]}
 teloxide = {version = "0.12", features = ["macros"]}
 tokio = {version = "^1", features = ["macros", "rt-multi-thread", "signal"]}
 
