@@ -137,7 +137,7 @@ pub(super) async fn bulletin(message: Message, bot: Bot, db_conn: Connection) ->
         .iter()
         .map(|n| format!("{n:o}"))
         .collect::<Vec<_>>()
-        .join("；");
+        .join("\u{ff1b}");
     let eng_weather_desc = weather_desc
         .iter()
         .map(|n| format!("{n:e}"))
@@ -162,13 +162,14 @@ pub(super) async fn bulletin(message: Message, bot: Bot, db_conn: Connection) ->
         );
     }
 
-    let mut eng_text1 = format!(
-        "At {eng_hour} at Hong Kong Observatory:\n\
+    let mut eng_text1 =
+        format!(
+            "At {eng_hour} at Hong Kong Observatory:\n\
          Temperature: <b>{}</b> degrees Celsius\n\
          Relative humidity: <b>{}</b> per cent\n\
          <b>{eng_weather_desc}</b>",
-        bulletin.temperature, bulletin.humidity,
-    );
+            bulletin.temperature, bulletin.humidity,
+        );
     if let Some(uv_index) = bulletin.uv_index {
         eng_text1 += &format!(
             "\n\n\
@@ -234,13 +235,14 @@ pub(super) async fn bulletin(message: Message, bot: Bot, db_conn: Connection) ->
         &chat.lang,
     );
     text += &warning;
-    text += &mix_strings(
-        &[
-            tropical_cyclone.add_single_newline(),
-            bulletin.rainstorm_reminder.add_single_newline(),
-        ],
-        &chat.lang,
-    );
+    text +=
+        &mix_strings(
+            &[
+                tropical_cyclone.add_single_newline(),
+                bulletin.rainstorm_reminder.add_single_newline(),
+            ],
+            &chat.lang,
+        );
 
     write!(text, "<i>@ {}</i>", bulletin.update_time).ok();
 
