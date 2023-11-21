@@ -21,7 +21,7 @@ impl Piece {
         let mut english_name = format!("{:e}", english.code);
 
         if let Some(code) = chinese.subtype {
-            chinese_name.push_str(&format!("：{code:o}"));
+            chinese_name.push_str(&format!("\u{ff1a}{code:o}"));
             english_name.push_str(&format!(": {code:e}"));
         }
 
