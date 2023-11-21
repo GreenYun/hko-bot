@@ -41,7 +41,7 @@ where
 
     let db = Connection::new(uri).await.unwrap_or_else(|e| {
         log::error!("{e}");
-        panic!("{e}");
+        panic!("{e}")
     });
 
     let db_name: String = sqlx::query("SELECT current_database()")

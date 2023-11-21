@@ -8,7 +8,7 @@ atty = "0.2"
 chrono = "^0.4"
 console = "0.15"
 env_logger = "0.10"
-hko = {version = "^1.9", features = ["fetch", "weather"]}
+hko = {version = "^1.11", features = ["fetch"]}
 lazy_static = "^1"
 log = "0.4"
 num-traits = "0.2"
