@@ -64,11 +64,16 @@ pub(super) async fn warning(message: Message, bot: Bot, db_conn: Connection) -> 
             Ok(_) => {}
             Err(RequestError::Api(ApiError::MessageIsTooLong)) => {
                 if matches!(chat.lang, Lang::Bilingual) {
-                    bot.send_message(chat_id, mix_strings(&list, &Lang::Chinese))
+                    text = mix_strings(&list, &Lang::Chinese);
+                    write!(text, "<i>@ {}</i>", w.update_time).ok();
+                    bot.send_message(chat_id, text)
                         .parse_mode(ParseMode::Html)
                         .reply_to_message_id(message.id)
                         .await?;
-                    bot.send_message(chat_id, mix_strings(&list, &Lang::English))
+
+                    text = mix_strings(&list, &Lang::English);
+                    write!(text, "<i>@ {}</i>", w.update_time).ok();
+                    bot.send_message(chat_id, text)
                         .parse_mode(ParseMode::Html)
                         .reply_to_message_id(message.id)
                         .await?;

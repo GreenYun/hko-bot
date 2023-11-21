@@ -39,7 +39,7 @@ pub(super) async fn setlang(
     }
 
     let Ok(lang) = Lang::from_str(&lang.unwrap()) else {
-        return respond(())
+        return respond(());
     };
 
     let chat = match db_conn.select_chat(chat_id.0).await {
