@@ -1,8 +1,7 @@
-// Copyright (c) 2022 - 2023 GreenYun Organization
+// Copyright (c) 2022 - 2024 GreenYun Organization
 // SPDX-License-Identifier: MIT
 
-use std::io::Write;
-
+use env_logger::TimestampPrecision;
 use log::LevelFilter;
 
 pub fn logging() {
@@ -22,17 +21,7 @@ pub fn logging() {
         .is_some_and(|s| !s.is_empty() && !matches!(s.as_str(), "0" | "false" | "no"));
 
     env_logger::builder()
-        .format(move |buf, record| {
-            let timestamp = buf.timestamp();
-            let level = record.level();
-            let style = buf.default_level_style(level);
-
-            if is_display_time {
-                writeln!(buf, "{timestamp} {style}{level}{style:#} {}", record.args())
-            } else {
-                writeln!(buf, "{style}{level}{style:#} {}", record.args())
-            }
-        })
+        .format_timestamp(is_display_time.then_some(TimestampPrecision::Seconds))
         .write_style(env_logger::fmt::WriteStyle::Auto)
         .filter_level(level)
         .init();
