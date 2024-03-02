@@ -4,14 +4,14 @@
 use std::sync::Arc;
 
 use teloxide::{
-    dispatching::{self, UpdateHandler},
+    dispatching::{DefaultKey, UpdateHandler},
     prelude::*,
     RequestError,
 };
 
 use crate::database::Connection;
 
-pub async fn connect<S>(token: S, db_conn: Connection) -> Dispatcher<Bot, RequestError, dispatching::DefaultKey>
+pub async fn connect<S>(token: S, db_conn: Connection) -> Dispatcher<Bot, RequestError, DefaultKey>
 where
     S: Into<String> + Send + Sync,
 {
@@ -33,7 +33,7 @@ where
 
     Dispatcher::builder(bot, schema())
         .dependencies(dependencies)
-        .default_handler(|_| async {})
+        .default_handler(|update| async move { log::debug!("{update:?}") })
         .error_handler(Arc::new(error_handler))
         .enable_ctrlc_handler()
         .build()

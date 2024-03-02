@@ -1,4 +1,4 @@
-// Copyright (c) 2022 - 2023 GreenYun Organization
+// Copyright (c) 2022 - 2024 GreenYun Organization
 // SPDX-License-identifier: MIT
 
 use std::{
@@ -13,14 +13,14 @@ pub struct BilingualString {
 }
 
 impl BilingualString {
-    #[allow(clippy::needless_pass_by_value)]
-    pub fn new<S>(chinese: S, english: S) -> Self
+    pub fn new<S1, S2>(chinese: S1, english: S2) -> Self
     where
-        S: ToString,
+        S1: Into<String>,
+        S2: Into<String>,
     {
         Self {
-            chinese: chinese.to_string(),
-            english: english.to_string(),
+            chinese: chinese.into(),
+            english: english.into(),
         }
     }
 

@@ -84,17 +84,16 @@ fn program_call_name() -> String {
         .into()
 }
 
-fn usage(mut w: impl io::Write) -> io::Result<()> {
-    writeln!(w, "usage: {} [-k bot_token] [-s database_uri]", program_call_name())
+fn usage(mut w: impl io::Write) {
+    writeln!(w, "usage: {} [-k bot_token] [-s database_uri]", program_call_name()).ok();
 }
 
 fn usage_then_exit(exit_val: i32) -> ! {
     if exit_val == 0 {
-        usage(io::stdout())
+        usage(io::stdout());
     } else {
-        usage(io::stderr())
+        usage(io::stderr());
     }
-    .unwrap();
 
     process::exit(exit_val)
 }

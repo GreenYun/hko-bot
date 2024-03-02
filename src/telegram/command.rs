@@ -31,11 +31,8 @@ pub enum Command {
 
 #[allow(clippy::unnecessary_wraps)]
 fn parse_setlang(input: String) -> Result<(Option<String>,), ParseError> {
-    if input.is_empty() {
-        Ok((None,))
-    } else {
-        Ok((Some(input),))
-    }
+    let input = (!input.is_empty()).then_some(input);
+    Ok((input,))
 }
 
 pub fn schema() -> UpdateHandler<RequestError> {

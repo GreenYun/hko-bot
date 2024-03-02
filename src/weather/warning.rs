@@ -1,4 +1,4 @@
-// Copyright (c) 2022 - 2023 GreenYun Organization
+// Copyright (c) 2022 - 2024 GreenYun Organization
 // SPDX-License-Identifier: MIT
 
 use chrono::{DateTime, FixedOffset};
@@ -40,18 +40,21 @@ impl Piece {
                     match c_len.cmp(&e_len) {
                         std::cmp::Ordering::Less => {
                             let mut v = vec![String::new(); e_len - c_len];
-                            v.extend_from_slice(&c);
+                            v.append(&mut c);
                             c = v;
                         }
-                        std::cmp::Ordering::Equal => {}
                         std::cmp::Ordering::Greater => {
                             let mut v = vec![String::new(); c_len - e_len];
-                            v.extend_from_slice(&e);
+                            v.append(&mut e);
                             e = v;
                         }
+                        std::cmp::Ordering::Equal => {}
                     }
 
-                    c.into_iter().zip(e).map(|(c, e)| BilingualString::new(c, e)).collect()
+                    c.into_iter()
+                        .zip(e)
+                        .map(|(c, e)| BilingualString::new(c.trim(), e.trim()))
+                        .collect()
                 })
                 .unwrap_or_default(),
             update_time: chinese.update_time.unwrap_or_default(),

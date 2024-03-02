@@ -1,4 +1,4 @@
-// Copyright (c) 2022 - 2023 GreenYun Organization
+// Copyright (c) 2022 - 2024 GreenYun Organization
 // SPDX-License-identifier: MIT
 
 use std::fmt::Write;
@@ -28,7 +28,7 @@ pub fn mix_strings(list: &[BilingualString], lang: &Lang) -> String {
                 if item.chinese.is_empty() {
                     continue;
                 }
-                writeln!(result, "{}", item.chinese.trim()).ok();
+                writeln!(result, "{item:x}").ok();
             }
             Lang::English => {
                 if item.english.is_empty() {
