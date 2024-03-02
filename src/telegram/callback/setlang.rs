@@ -1,18 +1,18 @@
-// Copyright (c) 2022 - 2023 GreenYun Organization
+// Copyright (c) 2022 - 2024 GreenYun Organization
 // SPDX-License-Identifier: MIT
 
 use std::str::FromStr;
 
 use teloxide::{
     prelude::*,
-    requests::ResponseResult,
     types::{InlineKeyboardMarkup, ParseMode},
 };
 
 use crate::{
+    answer,
     database::{types::lang::Lang, Connection},
     statics,
-    telegram::{misc::start_first, setlang_ikb, setlang_internal},
+    telegram::misc::{setlang_ikb, setlang_internal, start_first},
 };
 
 pub(super) async fn setlang(
@@ -56,18 +56,11 @@ pub(super) async fn setlang(
         }
     };
 
-    setlang_internal(lang.clone(), chat, db_conn, || async {
-        bot.edit_message_text(chat_id, message.id, match lang {
-            Lang::Bilingual => statics::SETLANG_MESSAGE_BILINGUAL,
-            Lang::Chinese => statics::SETLANG_MESSAGE_CHINESE,
-            Lang::English => statics::SETLANG_MESSAGE_ENGLISH,
-        })
-        .parse_mode(ParseMode::Html)
-        .await?;
-
-        respond(())
-    })
-    .await?;
+    if setlang_internal(&lang, chat, db_conn).await {
+        bot.edit_message_text(chat_id, message.id, answer::setlang(&lang))
+            .parse_mode(ParseMode::Html)
+            .await?;
+    }
 
     respond(())
 }

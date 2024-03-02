@@ -1,5 +1,9 @@
+# build artifacts
 /target
+
+# editor config
 /.vscode
+/.zed
 
 run.sh
 Cargo.lock

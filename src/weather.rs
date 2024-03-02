@@ -1,4 +1,4 @@
-// Copyright (c) 2022 - 2023 GreenYun Organization
+// Copyright (c) 2022 - 2024 GreenYun Organization
 // SPDX-License-Identifier: MIT
 
 use std::sync::Arc;
@@ -10,9 +10,9 @@ use tokio::{
 };
 
 macros::glob! {
-    fn briefing;
-    fn bulletin;
-    fn warning;
+    mod briefing;
+    mod bulletin;
+    mod warning;
     const ALL_UPDATERS: [&Updater; COUNT];
 }
 
@@ -23,12 +23,14 @@ pub async fn update() {
     let thread_mutex = mutex.clone();
 
     tokio::spawn(async move {
-        for updater in ALL_UPDATERS {
-            updater().await.ok();
+        {
+            let _ = thread_mutex.lock().await;
+            for updater in ALL_UPDATERS {
+                updater().await.ok();
+            }
         }
 
         let mut it = ALL_UPDATERS.into_iter().cycle();
-
         loop {
             {
                 let mutex_guard = thread_mutex.lock().await;
@@ -55,9 +57,5 @@ pub async fn update() {
 
     log::info!("Weather updater shutdown signal sent.");
 }
-
-mod briefing;
-mod bulletin;
-mod warning;
 
 mod macros;

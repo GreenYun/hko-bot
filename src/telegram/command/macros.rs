@@ -1,4 +1,4 @@
-// Copyright (c) 2022 - 2023 GreenYun Organization
+// Copyright (c) 2022 - 2024 GreenYun Organization
 // SPDX-License-identifier: MIT
 
 macro_rules! command_endpoint {
@@ -35,4 +35,14 @@ macro_rules! command_endpoint {
     };
 }
 
+macro_rules! reply_html {
+    ($to:expr, $on:expr, $text:expr, $bot:expr) => {
+        $bot.send_message($to, $text)
+            .parse_mode(ParseMode::Html)
+            .reply_to_message_id($on)
+            .await
+    };
+}
+
 pub(super) use command_endpoint;
+pub(super) use reply_html;

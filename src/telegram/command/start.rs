@@ -1,11 +1,12 @@
-// Copyright (c) 2022 - 2023 GreenYun Organization
+// Copyright (c) 2022 - 2024 GreenYun Organization
 // SPDX-License-Identifier: MIT
 
-use teloxide::{prelude::*, requests::ResponseResult, types::ParseMode};
+use teloxide::{prelude::*, types::ParseMode};
 
+use super::macros::reply_html;
 use crate::{
     database::{entities::chat::Chat, types::lang::Lang, Connection},
-    statics::{self, GREETINGS_CHINESE, GREETINGS_ENGLISH},
+    statics,
 };
 
 pub(super) async fn start(message: Message, bot: Bot, db_conn: Connection) -> ResponseResult<()> {
@@ -18,13 +19,12 @@ pub(super) async fn start(message: Message, bot: Bot, db_conn: Connection) -> Re
             return respond(());
         }
     } {
-        bot.send_message(chat_id, match chat.lang {
-            Lang::Chinese => GREETINGS_CHINESE.to_owned(),
-            Lang::English => GREETINGS_ENGLISH.to_owned(),
-            Lang::Bilingual => format!("{GREETINGS_CHINESE}\n{GREETINGS_ENGLISH}"),
-        })
-        .reply_to_message_id(message.id)
-        .await?;
+        let text = match chat.lang {
+            Lang::Chinese => statics::GREETINGS_CHINESE,
+            Lang::English => statics::GREETINGS_ENGLISH,
+            Lang::Bilingual => statics::GREETINGS_BILINGUAL,
+        };
+        reply_html!(chat_id, message.id, text, bot)?;
 
         return respond(());
     }
@@ -45,14 +45,12 @@ pub(super) async fn start(message: Message, bot: Bot, db_conn: Connection) -> Re
         return respond(());
     };
 
-    bot.send_message(chat_id, match lang {
+    let text = match lang {
         Lang::Bilingual => unreachable!(),
         Lang::Chinese => statics::START_MESSAGE_CHINESE,
         Lang::English => statics::START_MESSAGE_ENGLISH,
-    })
-    .parse_mode(ParseMode::Html)
-    .reply_to_message_id(message.id)
-    .await?;
+    };
+    reply_html!(chat_id, message.id, text, bot)?;
 
     respond(())
 }

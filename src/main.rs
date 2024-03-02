@@ -1,4 +1,4 @@
-// Copyright (c) 2022 - 2023 GreenYun Organization
+// Copyright (c) 2022 - 2024 GreenYun Organization
 // SPDX-License-Identifier: MIT
 
 #[tokio::main]
@@ -15,6 +15,7 @@ async fn main() {
     tokio::join!(weather::update(), tg.dispatch());
 }
 
+mod answer;
 mod args;
 mod config;
 mod database;

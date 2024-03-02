@@ -1,4 +1,4 @@
-// Copyright (c) 2022 - 2023 GreenYun Organization
+// Copyright (c) 2022 - 2024 GreenYun Organization
 // SPDX-License-Identifier: MIT
 
 use std::{env, io, process};
@@ -81,7 +81,7 @@ fn program_call_name() -> String {
         .split('/')
         .last()
         .unwrap()
-        .to_owned()
+        .into()
 }
 
 fn usage(mut w: impl io::Write) -> io::Result<()> {

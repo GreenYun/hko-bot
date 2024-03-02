@@ -5,7 +5,7 @@ use std::io::Write;
 
 use log::LevelFilter;
 
-use crate::config::internal::TTYSetColor;
+// use crate::config::internal::TTYSetColor;
 
 pub fn logging() {
     let level = match std::env::var_os("HKO_BOT_DEBUG").map_or(3, |s| s.to_string_lossy().parse::<u64>().unwrap_or(0)) {
@@ -24,22 +24,7 @@ pub fn logging() {
 
     env_logger::builder()
         .format(move |buf, record| {
-            use env_logger::fmt::Color;
-            use log::Level;
-
-            let mut style = buf.style();
-            let timestamp = style
-                .tty_set_color(Color::Rgb(128, 128, 128))
-                .value(format!("[{}]", buf.timestamp()));
-
-            let mut style = buf.style();
-            let level = match record.level() {
-                Level::Error => style.tty_set_color(Color::Red).value("ERROR"),
-                Level::Warn => style.tty_set_color(Color::Yellow).value("WARN "),
-                Level::Info => style.tty_set_color(Color::Green).value("INFO "),
-                Level::Debug => style.tty_set_color(Color::Blue).value("DEBUG"),
-                Level::Trace => style.tty_set_color(Color::Magenta).value("TRACE"),
-            };
+            let timestamp = buf.timestamp();
 
             if is_display_time {
                 writeln!(buf, "\r{timestamp} {level} {}", record.args())
@@ -52,20 +37,20 @@ pub fn logging() {
         .init();
 }
 
-mod internal {
-    use env_logger::fmt::{Color, Style};
+// mod internal {
+//     use env_logger::fmt::{Color, Style};
 
-    pub trait TTYSetColor {
-        fn tty_set_color(&mut self, color: Color) -> &mut Self;
-    }
+//     pub trait TTYSetColor {
+//         fn tty_set_color(&mut self, color: Color) -> &mut Self;
+//     }
 
-    impl TTYSetColor for Style {
-        fn tty_set_color(&mut self, color: Color) -> &mut Self {
-            if atty::is(atty::Stream::Stdout) {
-                self.set_color(color)
-            } else {
-                self
-            }
-        }
-    }
-}
+//     impl TTYSetColor for Style {
+//         fn tty_set_color(&mut self, color: Color) -> &mut Self {
+//             if atty::is(atty::Stream::Stdout) {
+//                 self.set_color(color)
+//             } else {
+//                 self
+//             }
+//         }
+//     }
+// }

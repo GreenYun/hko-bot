@@ -1,4 +1,4 @@
-// Copyright (c) 2022 - 2023 GreenYun Organization
+// Copyright (c) 2022 - 2024 GreenYun Organization
 // SPDX-License-Identifier: MIT
 
 macro_rules! count_tt {
@@ -12,9 +12,13 @@ macro_rules! count_tt {
 
 macro_rules! glob {
     {
-        $(fn $x:ident;)+
+        $(mod $x:ident;)+
         const $all_updaters:ident: [&$updater_type:ident; $count:ident];
     } => {
+        $(
+            mod $x;
+        )+
+
         $(::paste::paste! {
             ::lazy_static::lazy_static! {
                 static ref [<__ $x:upper>]: ::std::sync::Arc<::tokio::sync::RwLock<[<$x:lower>]::[<$x:camel>]>> =
@@ -37,7 +41,7 @@ macro_rules! glob {
             ::paste::paste! {
                 $(
                     const [<$x:lower _ updater>]: $updater_type = || {
-                        tokio::spawn([<$x:lower>]::update())
+                        ::tokio::spawn([<$x:lower>]::update())
                     };
                 )+
 
@@ -51,7 +55,6 @@ macro_rules! impl_update {
     ($self:ident) => {
         pub async fn update() {
             use hko::{common::Lang, fetch};
-            use paste::paste;
 
             let chinese = match fetch(Lang::TC).await {
                 Ok(data) => data,
@@ -69,10 +72,10 @@ macro_rules! impl_update {
                 }
             };
 
-            paste! { let b = [< $self:camel >] ::new(chinese, english); }
+            ::paste::paste! { let b = [<$self:camel>]::new(chinese, english); }
 
             {
-                paste! { let arc = super:: [< $self:lower >] (); }
+                ::paste::paste! { let arc = super::[<$self:lower>](); }
                 let mut lock = arc.write().await;
                 *lock = b;
             }

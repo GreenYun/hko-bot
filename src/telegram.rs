@@ -1,4 +1,4 @@
-// Copyright (c) 2022 - 2023 GreenYun Organization
+// Copyright (c) 2022 - 2024 GreenYun Organization
 // SPDX-License-Identifier: MIT
 
 use std::sync::Arc;
@@ -10,8 +10,6 @@ use teloxide::{
 };
 
 use crate::database::Connection;
-
-use command::{setlang_ikb, setlang_internal};
 
 pub async fn connect<S>(token: S, db_conn: Connection) -> Dispatcher<Bot, RequestError, dispatching::DefaultKey>
 where
@@ -43,11 +41,16 @@ where
 
 fn schema() -> UpdateHandler<RequestError> {
     let callback_handler = Update::filter_callback_query().branch(callback::schema());
+    let inline_query_handler = Update::filter_inline_query().branch(inlineq::schema());
     let message_handler = Update::filter_message().branch(command::schema());
 
-    dptree::entry().branch(message_handler).branch(callback_handler)
+    dptree::entry()
+        .branch(message_handler)
+        .branch(callback_handler)
+        .branch(inline_query_handler)
 }
 
 mod callback;
 mod command;
+mod inlineq;
 mod misc;

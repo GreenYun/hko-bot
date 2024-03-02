@@ -1,4 +1,4 @@
-// Copyright (c) 2022 - 2023 GreenYun Organization
+// Copyright (c) 2022 - 2024 GreenYun Organization
 // SPDX-License-identifier: MIT
 
 use teloxide::{
@@ -9,6 +9,8 @@ use teloxide::{
     RequestError,
 };
 
+use super::misc::start_first;
+use crate::database::Connection;
 use macros::command_endpoint;
 
 #[derive(BotCommands, Clone)]
@@ -43,17 +45,25 @@ pub fn schema() -> UpdateHandler<RequestError> {
             message.text().and_then(|text| Command::parse(text, &bot_name).ok())
         })
         .branch(command_endpoint!(Command::Start))
-        .branch(command_endpoint!(Command::Help))
-        .branch(command_endpoint!(Command::Settings))
-        .branch(command_endpoint!(Command::Purge))
-        .branch(command_endpoint!(Command::SetLang(lang)))
-        .branch(command_endpoint!(Command::Briefing))
-        .branch(command_endpoint!(Command::Bulletin))
-        .branch(command_endpoint!(Command::Warning)),
+        .branch(
+            dptree::filter_map_async(|message: Message, db_conn: Connection| async move {
+                let chat_id = message.chat.id;
+                db_conn.select_chat(chat_id.0).await.ok().flatten()
+            })
+            .branch(command_endpoint!(Command::Help))
+            .branch(command_endpoint!(Command::Settings))
+            .branch(command_endpoint!(Command::Purge))
+            .branch(command_endpoint!(Command::SetLang(lang)))
+            .branch(command_endpoint!(Command::Briefing))
+            .branch(command_endpoint!(Command::Bulletin))
+            .branch(command_endpoint!(Command::Warning)),
+        )
+        .branch(dptree::endpoint(|message: Message, bot: Bot| async move {
+            let chat_id = message.chat.id;
+            start_first(bot, chat_id).await
+        })),
     )
 }
-
-pub(super) use setlang::{setlang_ikb, setlang_internal};
 
 mod briefing;
 mod bulletin;
