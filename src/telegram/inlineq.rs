@@ -5,8 +5,8 @@ use teloxide::{dispatching::UpdateHandler, prelude::*, RequestError};
 
 use crate::database::Connection;
 
-async fn answer(query: InlineQuery, bot: Bot, db_conn: Connection) -> ResponseResult<()> {
-    todo!()
+async fn answer(_query: InlineQuery, _bot: Bot, _db_conn: Connection) -> ResponseResult<()> {
+    respond(())
 }
 
 pub fn schema() -> UpdateHandler<RequestError> {
