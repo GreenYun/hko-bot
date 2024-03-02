@@ -25,11 +25,13 @@ pub fn logging() {
     env_logger::builder()
         .format(move |buf, record| {
             let timestamp = buf.timestamp();
+            let level = record.level();
+            let style = buf.default_level_style(level);
 
             if is_display_time {
-                writeln!(buf, "\r{timestamp} {level} {}", record.args())
+                writeln!(buf, "\r{timestamp} {style}{level}{style:#} {}", record.args())
             } else {
-                writeln!(buf, "\r{level} {}", record.args())
+                writeln!(buf, "\r{style}{level}{style:#} {}", record.args())
             }
         })
         .write_style(env_logger::fmt::WriteStyle::Auto)
