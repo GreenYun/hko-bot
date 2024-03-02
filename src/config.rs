@@ -6,19 +6,20 @@ use std::io::Write;
 use log::LevelFilter;
 
 pub fn logging() {
-    let level = match std::env::var_os("HKO_BOT_DEBUG").map_or(3, |s| s.to_string_lossy().parse::<u64>().unwrap_or(0)) {
-        0 => LevelFilter::Off,
-        1 => LevelFilter::Error,
-        2 => LevelFilter::Warn,
-        3 => LevelFilter::Info,
-        4 => LevelFilter::Debug,
-        _ => LevelFilter::Trace,
-    };
+    let level = std::env::var_os("HKO_BOT_VERBOSITY")
+        .map(|s| s.to_string_lossy().to_ascii_lowercase())
+        .map_or(LevelFilter::Info, |s| match s.as_str() {
+            "err" | "error" | "1" => LevelFilter::Error,
+            "warn" | "warning" | "2" => LevelFilter::Warn,
+            "info" | "3" => LevelFilter::Info,
+            "debug" | "4" => LevelFilter::Debug,
+            "trace" | "5" => LevelFilter::Trace,
+            _ => LevelFilter::Off,
+        });
 
-    let is_display_time = std::env::var_os("HKO_BOT_TIME").map_or(false, |s| {
-        let s = s.to_string_lossy();
-        !(s.is_empty() || s.to_ascii_lowercase() == "false" || s == "0")
-    });
+    let is_display_time = std::env::var_os("HKO_BOT_TIME")
+        .map(|s| s.to_string_lossy().to_ascii_lowercase())
+        .is_some_and(|s| !s.is_empty() && !matches!(s.as_str(), "0" | "false" | "no"));
 
     env_logger::builder()
         .format(move |buf, record| {
