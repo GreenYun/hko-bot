@@ -34,19 +34,19 @@ async fn answer(query: InlineQuery, bot: Bot) -> ResponseResult<()> {
     let mut results = vec![];
 
     if let Some(s) = some_non_empty_string(answer::briefing(&Lang::Chinese).await) {
-        results.push(new_result_article("briefing", BRIEFING_TITLE_CHINESE, s));
+        results.push(new_result_article("briefing_zh", BRIEFING_TITLE_CHINESE, s));
     }
 
     if let Some(s) = some_non_empty_string(answer::bulletin(&Lang::Chinese).await) {
-        results.push(new_result_article("bulletin", BULLETIN_TITLE_CHINESE, s));
+        results.push(new_result_article("bulletin_zh", BULLETIN_TITLE_CHINESE, s));
     }
 
     if let Some(s) = some_non_empty_string(answer::briefing(&Lang::English).await) {
-        results.push(new_result_article("briefing", BRIEFING_TITLE_ENGLISH, s));
+        results.push(new_result_article("briefing_en", BRIEFING_TITLE_ENGLISH, s));
     }
 
     if let Some(s) = some_non_empty_string(answer::bulletin(&Lang::English).await) {
-        results.push(new_result_article("bulletin", BULLETIN_TITLE_ENGLISH, s));
+        results.push(new_result_article("bulletin_en", BULLETIN_TITLE_ENGLISH, s));
     }
 
     bot.answer_inline_query(query.id, results).await?;
