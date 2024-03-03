@@ -1,14 +1,13 @@
 // Copyright (c) 2024 GreenYun Organization
 // SPDX-License-identifier: MIT
 
-use std::ops::Not;
-
 use teloxide::{dispatching::UpdateHandler, prelude::*, types::InlineQueryResult, RequestError};
 
 use crate::{
     answer,
     database::types::lang::Lang,
     statics::{BRIEFING_TITLE_CHINESE, BRIEFING_TITLE_ENGLISH, BULLETIN_TITLE_CHINESE, BULLETIN_TITLE_ENGLISH},
+    tool::ext::NonEmptyExt,
 };
 
 fn new_result_article<S1, S2, S3>(id: S1, title: S2, content: S3) -> InlineQueryResult
@@ -26,26 +25,22 @@ where
     ))
 }
 
-fn some_non_empty_string(s: String) -> Option<String> {
-    s.is_empty().not().then_some(s)
-}
-
 async fn answer(query: InlineQuery, bot: Bot) -> ResponseResult<()> {
     let mut results = vec![];
 
-    if let Some(s) = some_non_empty_string(answer::briefing(&Lang::Chinese).await) {
+    if let Some(s) = answer::briefing(&Lang::Chinese).await.get_non_empty() {
         results.push(new_result_article("briefing_zh", BRIEFING_TITLE_CHINESE, s));
     }
 
-    if let Some(s) = some_non_empty_string(answer::bulletin(&Lang::Chinese).await) {
+    if let Some(s) = answer::bulletin(&Lang::Chinese).await.get_non_empty() {
         results.push(new_result_article("bulletin_zh", BULLETIN_TITLE_CHINESE, s));
     }
 
-    if let Some(s) = some_non_empty_string(answer::briefing(&Lang::English).await) {
+    if let Some(s) = answer::briefing(&Lang::English).await.get_non_empty() {
         results.push(new_result_article("briefing_en", BRIEFING_TITLE_ENGLISH, s));
     }
 
-    if let Some(s) = some_non_empty_string(answer::bulletin(&Lang::English).await) {
+    if let Some(s) = answer::bulletin(&Lang::English).await.get_non_empty() {
         results.push(new_result_article("bulletin_en", BULLETIN_TITLE_ENGLISH, s));
     }
 
