@@ -28,7 +28,7 @@ pub fn mix_strings(list: &[BilingualString], lang: &Lang) -> String {
                 if item.chinese.is_empty() {
                     continue;
                 }
-                writeln!(result, "{item:x}").ok();
+                writeln!(result, "{}", item.chinese.trim()).ok();
             }
             Lang::English => {
                 if item.english.is_empty() {

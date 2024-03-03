@@ -51,10 +51,7 @@ impl Piece {
                         std::cmp::Ordering::Equal => {}
                     }
 
-                    c.into_iter()
-                        .zip(e)
-                        .map(|(c, e)| BilingualString::new(c.trim(), e.trim()))
-                        .collect()
+                    c.into_iter().zip(e).map(|(c, e)| BilingualString::new(c, e)).collect()
                 })
                 .unwrap_or_default(),
             update_time: chinese.update_time.unwrap_or_default(),
