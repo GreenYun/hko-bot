@@ -1,6 +1,8 @@
 // Copyright (c) 2022 - 2024 GreenYun Organization
 // SPDX-License-identifier: MIT
 
+#![allow(dead_code)]
+
 use paste::paste;
 
 macro_rules! make_bilingual {
@@ -101,3 +103,11 @@ make_bilingual!(
     "現時並無特別報告。",
     "There is no special announcement."
 );
+
+// Briefing titles
+
+make_bilingual!(BRIEFING_TITLE, "本港地區天氣預報", "Local Weather Forecast");
+
+// Bulletin titles
+
+make_bilingual!(BULLETIN_TITLE, "本港地區天氣報告", "Current Weather Report");
