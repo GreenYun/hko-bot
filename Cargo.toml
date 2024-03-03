@@ -19,3 +19,4 @@ tokio = {version = "^1", features = ["macros", "rt-multi-thread", "signal"]}
 
 [profile.release]
 lto = "thin"
+strip = "symbols"
