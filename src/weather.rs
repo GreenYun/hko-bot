@@ -20,24 +20,24 @@ pub async fn update() {
     const UPDATE_PERIOD: u64 = 300;
 
     let mutex = Arc::new(Mutex::new(false));
-    let thread_mutex = mutex.clone();
+    let inner_mutex = mutex.clone();
 
     tokio::spawn(async move {
         {
-            let _ = thread_mutex.lock().await;
+            let _ = inner_mutex.lock().await;
             for updater in ALL_UPDATERS {
                 updater().await.ok();
             }
         }
 
-        let mut it = ALL_UPDATERS.into_iter().cycle();
+        let mut iter = ALL_UPDATERS.into_iter().cycle();
         loop {
             {
-                let mutex_guard = thread_mutex.lock().await;
-                if *mutex_guard {
-                    log::info!("weather updater is shutdown");
+                let will_die = inner_mutex.lock().await;
+                if *will_die {
+                    log::info!("weather updater is shut down");
                     return;
-                } else if let Some(f) = it.next() {
+                } else if let Some(f) = iter.next() {
                     f().await.ok();
                 }
             }
@@ -51,11 +51,11 @@ pub async fn update() {
     }
 
     {
-        let mut dead = mutex.lock().await;
-        *dead = true;
+        let mut will_die = mutex.lock().await;
+        *will_die = true;
     }
 
-    log::info!("Weather updater shutdown signal sent.");
+    log::info!("Weather updater shutdown signal sent");
 }
 
 mod macros;
