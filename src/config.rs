@@ -29,11 +29,13 @@ pub fn logging() {
 
     if is_syslog_style {
         builder.format(|buf, record| {
+            use log::Level;
+
             let syslog_level = match record.level() {
-                log::Level::Error => 3,
-                log::Level::Warn => 4,
-                log::Level::Info => 6,
-                log::Level::Debug | log::Level::Trace => 7,
+                Level::Error => 3,
+                Level::Warn => 4,
+                Level::Info => 6,
+                Level::Debug | Level::Trace => 7,
             };
             writeln!(buf, "<{syslog_level}>[{}] {}", record.target(), record.args())
         });

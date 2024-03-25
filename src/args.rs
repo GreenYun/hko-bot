@@ -3,6 +3,8 @@
 
 use std::{env, io, process};
 
+use crate::NAME_VERSION_STRING;
+
 #[derive(Clone)]
 pub struct Args {
     pub bot: String,
@@ -17,13 +19,13 @@ impl Args {
         env::vars_os()
             .map(|var| {
                 (
-                    var.0.to_string_lossy().into_owned().to_lowercase(),
+                    var.0.to_string_lossy().into_owned().to_uppercase(),
                     var.1.to_string_lossy().into_owned(),
                 )
             })
             .for_each(|(key, val)| match key.as_str() {
-                "hko_bot_token" => bot = val,
-                "hko_bot_database_uri" => db_uri = val,
+                "HKO_BOT_TOKEN" => bot = val,
+                "HKO_BOT_DATABASE_URI" => db_uri = val,
                 _ => (),
             });
 
@@ -33,7 +35,7 @@ impl Args {
             match arg.as_ref() {
                 "--help" => usage_then_exit(0),
                 "--version" => {
-                    println!(concat!(env!("CARGO_PKG_NAME"), " ", env!("CARGO_PKG_VERSION")));
+                    println!("{NAME_VERSION_STRING}");
                     process::exit(0);
                 }
 
