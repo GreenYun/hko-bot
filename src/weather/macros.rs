@@ -10,7 +10,7 @@ macro_rules! count_tt {
     };
 }
 
-macro_rules! glob {
+macro_rules! weather_mods {
     {
         $(mod $x:ident;)+
         const $all_updaters:ident: [&$updater_type:ident; $count:ident];
@@ -41,7 +41,7 @@ macro_rules! glob {
             ::paste::paste! {
                 $(
                     const [<$x:lower _ updater>]: $updater_type = || {
-                        ::tokio::spawn([<$x:lower>]::update())
+                        ::tokio::spawn(<[<$x:lower>]::[<$x:camel>] as $crate::weather::AsyncUpdater>::update())
                     };
                 )+
 
@@ -51,38 +51,5 @@ macro_rules! glob {
     };
 }
 
-macro_rules! impl_update {
-    ($self:ident) => {
-        pub async fn update() {
-            use hko::{common::Lang, fetch};
-
-            let chinese = match fetch(Lang::TC).await {
-                Ok(data) => data,
-                Err(e) => {
-                    log::error!("{e}");
-                    return;
-                }
-            };
-
-            let english = match fetch(Lang::EN).await {
-                Ok(data) => data,
-                Err(e) => {
-                    log::error!("{e}");
-                    return;
-                }
-            };
-
-            ::paste::paste! { let b = [<$self:camel>]::new(chinese, english); }
-
-            {
-                ::paste::paste! { let arc = super::[<$self:lower>](); }
-                let mut lock = arc.write().await;
-                *lock = b;
-            }
-        }
-    };
-}
-
 pub(super) use count_tt;
-pub(super) use glob;
-pub(super) use impl_update;
+pub(super) use weather_mods;

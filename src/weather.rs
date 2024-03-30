@@ -9,11 +9,55 @@ use tokio::{
     time::{sleep, Duration},
 };
 
-macros::glob! {
+macros::weather_mods! {
     mod briefing;
     mod bulletin;
     mod warning;
     const ALL_UPDATERS: [&Updater; COUNT];
+}
+
+trait WeatherData {
+    type Source;
+    const UPDATE_FN: fn() -> std::sync::Arc<tokio::sync::RwLock<Self>>;
+    fn translate(chinese: Self::Source, english: Self::Source) -> Self;
+}
+
+trait AsyncUpdater {
+    async fn update();
+}
+
+impl<T> AsyncUpdater for T
+where
+    T: WeatherData + Send + Sync,
+    T::Source: hko::Fetch + Send,
+{
+    async fn update() {
+        use hko::{common::Lang, fetch};
+
+        let chinese = match fetch(Lang::TC).await {
+            Ok(data) => data,
+            Err(e) => {
+                log::error!("failed to fetch Chinese weather data: {}", e);
+                return;
+            }
+        };
+
+        let english = match fetch(Lang::EN).await {
+            Ok(data) => data,
+            Err(e) => {
+                log::error!("failed to fetch English weather data: {}", e);
+                return;
+            }
+        };
+
+        let translated = T::translate(chinese, english);
+
+        {
+            let arc = Self::UPDATE_FN();
+            let mut lock = arc.write().await;
+            *lock = translated;
+        }
+    }
 }
 
 pub async fn update() {

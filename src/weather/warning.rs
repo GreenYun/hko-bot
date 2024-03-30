@@ -6,8 +6,6 @@ use hko::weather::{warning::info::InfoDetail, Info};
 
 use crate::tool::types::BilingualString;
 
-use super::macros::impl_update;
-
 #[derive(Clone, Default)]
 pub struct Piece {
     pub name: BilingualString,
@@ -64,8 +62,12 @@ pub struct Warning {
     pub pieces: Vec<Piece>,
 }
 
-impl Warning {
-    pub fn new(chinese: Info, english: Info) -> Self {
+impl super::WeatherData for Warning {
+    type Source = Info;
+
+    const UPDATE_FN: fn() -> std::sync::Arc<tokio::sync::RwLock<Self>> = super::warning;
+
+    fn translate(chinese: Self::Source, english: Self::Source) -> Self {
         Self {
             pieces: chinese
                 .details
@@ -75,5 +77,3 @@ impl Warning {
         }
     }
 }
-
-impl_update!(warning);

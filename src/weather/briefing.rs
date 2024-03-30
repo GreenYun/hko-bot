@@ -6,8 +6,6 @@ use hko::weather::Local;
 
 use crate::tool::types::BilingualString;
 
-use super::macros::impl_update;
-
 #[derive(Clone, Default)]
 pub struct Briefing {
     pub general_situation: BilingualString,
@@ -19,8 +17,12 @@ pub struct Briefing {
     pub update_time: DateTime<FixedOffset>,
 }
 
-impl Briefing {
-    pub fn new(chinese: Local, english: Local) -> Self {
+impl super::WeatherData for Briefing {
+    type Source = Local;
+
+    const UPDATE_FN: fn() -> std::sync::Arc<tokio::sync::RwLock<Self>> = super::briefing;
+
+    fn translate(chinese: Self::Source, english: Self::Source) -> Self {
         Self {
             general_situation: BilingualString::new(chinese.general_situation, english.general_situation),
             forecast_period: BilingualString::new(chinese.forecast_period, english.forecast_period),
@@ -32,5 +34,3 @@ impl Briefing {
         }
     }
 }
-
-impl_update!(briefing);

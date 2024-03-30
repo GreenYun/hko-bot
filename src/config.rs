@@ -20,7 +20,7 @@ pub fn logging() {
         _ => LevelFilter::Off,
     });
 
-    let is_display_time = get_lowercase_env_var("HKO_BOT_LOG_TIME")
+    let mut is_display_time = get_lowercase_env_var("HKO_BOT_LOG_TIME")
         .is_some_and(|s| !s.is_empty() && !matches!(s.as_str(), "0" | "false" | "no"));
 
     let is_syslog_style = get_lowercase_env_var("HKO_BOT_LOG_STYLE").is_some_and(|s| s == "syslog");
@@ -28,6 +28,7 @@ pub fn logging() {
     let mut builder = env_logger::builder();
 
     if is_syslog_style {
+        is_display_time = false;
         builder.format(|buf, record| {
             use log::Level;
 

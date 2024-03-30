@@ -6,8 +6,6 @@ use hko::weather::Current;
 
 use crate::tool::types::BilingualString;
 
-use super::macros::impl_update;
-
 #[derive(Clone, Default)]
 pub struct Bulletin {
     pub temperature: f32,
@@ -21,8 +19,12 @@ pub struct Bulletin {
     pub update_time: DateTime<FixedOffset>,
 }
 
-impl Bulletin {
-    pub fn new(chinese: Current, english: Current) -> Self {
+impl super::WeatherData for Bulletin {
+    type Source = Current;
+
+    const UPDATE_FN: fn() -> std::sync::Arc<tokio::sync::RwLock<Self>> = super::bulletin;
+
+    fn translate(chinese: Self::Source, english: Self::Source) -> Self {
         Self {
             temperature: english
                 .temperature
@@ -67,5 +69,3 @@ impl Bulletin {
         }
     }
 }
-
-impl_update!(bulletin);
