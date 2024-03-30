@@ -1,7 +1,7 @@
 // Copyright (c) 2022 - 2024 GreenYun Organization
 // SPDX-License-Identifier: MIT
 
-use std::sync::Arc;
+use std::{any::type_name, sync::Arc};
 
 use tokio::{
     signal,
@@ -33,6 +33,8 @@ where
 {
     async fn update() {
         use hko::{common::Lang, fetch};
+
+        log::debug!("updating {}", type_name::<T>());
 
         let chinese = match fetch(Lang::TC).await {
             Ok(data) => data,
