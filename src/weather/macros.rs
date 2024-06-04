@@ -1,55 +1,63 @@
 // Copyright (c) 2022 - 2024 GreenYun Organization
 // SPDX-License-Identifier: MIT
 
-macro_rules! count_tt {
-    () => {
-        0
-    };
-    ($x:tt $($y:tt)*) => {
-        1 + $crate::weather::macros::count_tt!($($y)*)
-    };
-}
-
 macro_rules! weather_mods {
-    {
-        $(mod $x:ident;)+
-        const $all_updaters:ident: [&$updater_type:ident; $count:ident];
-    } => {
-        $(
-            mod $x;
-        )+
-
-        $(::paste::paste! {
-            ::lazy_static::lazy_static! {
-                static ref [<__ $x:upper>]: ::std::sync::Arc<::tokio::sync::RwLock<[<$x:lower>]::[<$x:camel>]>> =
-                    ::std::sync::Arc::new(::tokio::sync::RwLock::new(Default::default()));
-            }
-
-            #[inline]
-            pub fn [<$x:lower>]() -> ::std::sync::Arc<::tokio::sync::RwLock<[<$x:lower>]::[<$x:camel>]>> {
-                [<__ $x:upper>].clone()
-            }
-        })+
+    ( @ {
+        ( $($m:ident),* $(,)? )
+        ( $($total:tt)* )
+        ( $all_updaters:ident, $updater_type:ident, $count:ident )
+    }) => {
+        ::paste::paste! {
+            $(
+                pub mod [<$m:lower>];
+                pub use [<$m:lower>]::[<$m:camel>];
+            )*
+        }
 
         type $updater_type = fn() -> ::tokio::task::JoinHandle<()>;
 
         #[allow(non_upper_case_globals)]
-        const $count: usize = $crate::weather::macros::count_tt!($($x)+);
+        const $count: usize = $($total)*;
 
         #[allow(non_upper_case_globals)]
         const $all_updaters: [&$updater_type; $count] = {
             ::paste::paste! {
                 $(
-                    const [<$x:lower _ updater>]: $updater_type = || {
-                        ::tokio::spawn(<[<$x:lower>]::[<$x:camel>] as $crate::weather::AsyncUpdater>::update())
+                    const [<$m:lower _ updater>]: $updater_type = || {
+                        ::tokio::spawn($crate::weather::update_data::<$m::[<$m:camel>]>())
                     };
                 )+
 
-                [$(&[<$x:lower _ updater>]),+]
+                [$(&[<$m:lower _ updater>]),+]
             }
         };
     };
+
+    ( @ {
+        ( $($m:ident),* $(,)? )
+        ( $($total:tt)* )
+        ( $all_updaters:ident, $updater_type:ident, $count:ident )
+    } $x:ident, $($r:tt)* ) => {
+        $crate::weather::macros::weather_mods! {
+            @ {
+                ( $($m,)* $x, )
+                ( $($total)* + 1 )
+                ( $all_updaters, $updater_type, $count )
+            }
+            $($r)*
+        }
+    };
+
+    // Entry point
+    {
+        $(pub mod $x:ident;)+
+        const $all_updaters:ident: [&$updater_type:ident; $count:ident];
+    } => {
+        $crate::weather::macros::weather_mods! {
+            @ { () ( 0 ) ( $all_updaters, $updater_type, $count ) }
+            $($x,)+
+        }
+    };
 }
 
-pub(super) use count_tt;
 pub(super) use weather_mods;

@@ -1,6 +1,10 @@
 // Copyright (c) 2022 - 2024 GreenYun Organization
 // SPDX-License-Identifier: MIT
 
+// Trying to no to use incomplete features
+// #![allow(incomplete_features)]
+// #![feature(return_type_notation)]
+
 pub const NAME_VERSION_STRING: &str = concat!(env!("CARGO_PKG_NAME"), " ", env!("CARGO_PKG_VERSION"));
 
 #[tokio::main]

@@ -1,4 +1,4 @@
-// Copyright (c) 2022 - 2023 GreenYun Organization
+// Copyright (c) 2022 - 2024 GreenYun Organization
 // SPDX-License-identifier: MIT
 
 use std::fmt::Display;
@@ -16,12 +16,19 @@ pub enum Lang {
     English,
 }
 
+impl Lang {
+    #[inline]
+    pub fn map<T>(&self, bilingual: T, chinese: T, english: T) -> T {
+        match self {
+            Self::Bilingual => bilingual,
+            Self::Chinese => chinese,
+            Self::English => english,
+        }
+    }
+}
+
 impl Display for Lang {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        f.write_str(match self {
-            Self::Bilingual => "雙語 Bilingual",
-            Self::Chinese => "中文",
-            Self::English => "English",
-        })
+        f.write_str(self.map("雙語 Bilingual", "中文", "English"))
     }
 }

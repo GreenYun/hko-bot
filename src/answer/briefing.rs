@@ -1,42 +1,100 @@
 // Copyright (c) 2024 GreenYun Organization
 // SPDX-License-Identifier: MIT
 
-use std::fmt::Write;
+use std::{fmt::Write, sync::OnceLock};
 
-use chrono::Utc;
+use chrono::{DateTime, FixedOffset, Utc};
+use tokio::sync::RwLock;
 
 use crate::{
     database::types::lang::Lang,
-    tool::{mix_strings, try_data, types::BilingualString},
-    weather,
+    statics::get_bilingual_str,
+    tool::{
+        data::{out_dated, out_minuted},
+        mix_strings,
+        types::BilingualString,
+    },
+    weather::{Briefing as Data, WeatherData},
 };
 
-pub async fn to_string(lang: &Lang) -> String {
-    let Some(briefing) = try_data(weather::briefing, |v| {
-        (Utc::now().naive_utc() - v.update_time.naive_utc()).num_days() <= 1
-    })
-    .await
-    else {
-        return "Connection timed out, please try again later.".into();
+use super::{Answer, AnswerStore};
+
+pub struct Briefing;
+
+impl Answer for Briefing {
+    async fn answer(lang: &Lang) -> String {
+        update_and_get(lang).await
+    }
+}
+
+static ANSWER_BI: OnceLock<RwLock<AnswerStore>> = OnceLock::new();
+static ANSWER_EN: OnceLock<RwLock<AnswerStore>> = OnceLock::new();
+static ANSWER_ZH: OnceLock<RwLock<AnswerStore>> = OnceLock::new();
+
+static LAST_CHECK: OnceLock<RwLock<DateTime<Utc>>> = OnceLock::new();
+
+pub async fn update_and_get(lang: &Lang) -> String {
+    let ol = lang.map(&ANSWER_BI, &ANSWER_ZH, &ANSWER_EN);
+    let answer = ol.get_or_init(|| RwLock::new(AnswerStore::default()));
+
+    let old = {
+        let old = answer.read().await;
+        old.clone()
     };
 
-    let mut text = mix_strings(
-        &[
-            briefing.general_situation.add_single_newline(),
-            ("<b>".to_string()
-                + briefing.forecast_period
-                + "</b>\n"
-                + briefing.forecast_desc
-                + BilingualString::new("\n展望", "\nOutlook: ")
-                + briefing.outlook)
-                .add_single_newline(),
-            briefing.tc_info.add_single_newline(),
-            briefing.fire_danger_warning.add_single_newline(),
-        ],
-        lang,
-    );
+    if let Some(new) = update(&Lang::Chinese, &old.update_time).await {
+        let mut answer = answer.write().await;
+        *answer = new;
+        return answer.inner.clone();
+    }
 
-    write!(text, "<i>@ {}</i>", briefing.update_time).ok();
+    old.inner
+}
 
-    text
+pub async fn update(lang: &Lang, last_update: &DateTime<FixedOffset>) -> Option<AnswerStore> {
+    {
+        let last_check = LAST_CHECK.get_or_init(|| RwLock::new(DateTime::default()));
+        let mut last_check = last_check.write().await;
+        let now = out_minuted(*last_check)?;
+        *last_check = now;
+    }
+
+    let data = Data::get().await;
+
+    let Some(data) = data else {
+        return AnswerStore {
+            inner: get_bilingual_str!(lang, SERVER_ERROR_TIMEDOUT).into(),
+            update_time: DateTime::UNIX_EPOCH.into(),
+        }
+        .into();
+    };
+
+    if out_dated(data.update_time.to_utc()) {
+        return None;
+    }
+
+    if last_update >= &data.update_time {
+        return None;
+    }
+
+    let mut inner = mix_strings(lang, &[
+        data.general_situation.add_single_newline(),
+        ("<b>".to_string()
+            + data.forecast_period
+            + "</b>\n"
+            + data.forecast_desc
+            + BilingualString::new("\n展望", "\nOutlook: ")
+            + data.outlook)
+            .add_single_newline(),
+        data.tc_info.add_single_newline(),
+        data.fire_danger_warning.add_single_newline(),
+    ]);
+
+    write!(inner, "<i>@ {}</i>", data.update_time).ok();
+
+    AnswerStore {
+        inner,
+        update_time: data.update_time,
+    }
+    .into()
 }

@@ -1,10 +1,15 @@
-// Copyright (c) 2022 - 2023 GreenYun Organization
+// Copyright (c) 2022 - 2024 GreenYun Organization
 // SPDX-License-Identifier: MIT
+
+use std::sync::OnceLock;
 
 use chrono::{DateTime, FixedOffset};
 use hko::weather::Local;
+use tokio::sync::RwLock;
 
 use crate::tool::types::BilingualString;
+
+use super::{WeatherData, WeatherDataUpdater};
 
 #[derive(Clone, Default)]
 pub struct Briefing {
@@ -17,10 +22,33 @@ pub struct Briefing {
     pub update_time: DateTime<FixedOffset>,
 }
 
-impl super::WeatherData for Briefing {
+static BRIEFING_STORE: OnceLock<RwLock<Briefing>> = OnceLock::new();
+
+impl WeatherData for Briefing {
+    async fn get() -> Option<Self> {
+        if let Some(lock) = BRIEFING_STORE.get() {
+            let lock = lock.read().await;
+            Some(lock.clone())
+        } else {
+            None
+        }
+    }
+}
+
+impl WeatherDataUpdater for Briefing {
     type Source = Local;
 
-    const UPDATE_FN: fn() -> std::sync::Arc<tokio::sync::RwLock<Self>> = super::briefing;
+    async fn update(chinese: Local, english: Local) {
+        let translated = Self::translate(chinese, english);
+        if let Some(lock) = BRIEFING_STORE.get() {
+            let mut lock = lock.write().await;
+            *lock = translated;
+        } else {
+            BRIEFING_STORE.set(RwLock::new(translated)).ok();
+        }
+    }
+
+    // const UPDATE_FN: fn() -> Arc<RwLock<Self>> = super::get_briefing;
 
     fn translate(chinese: Self::Source, english: Self::Source) -> Self {
         Self {

@@ -4,12 +4,15 @@
 use teloxide::{prelude::*, types::ParseMode};
 
 use super::macros::reply_html;
-use crate::{answer, database::entities::chat::Chat};
+use crate::{
+    answer::{Answer, Briefing},
+    database::entities::chat::Chat,
+};
 
 pub(super) async fn briefing(message: Message, bot: Bot, chat: Chat) -> ResponseResult<()> {
     let chat_id = message.chat.id;
 
-    reply_html!(chat_id, message.id, answer::briefing(&chat.lang).await, bot)?;
+    reply_html!(chat_id, message.id, Briefing::answer(&chat.lang).await, bot)?;
 
     respond(())
 }

@@ -6,7 +6,7 @@ use teloxide::{prelude::*, types::ParseMode};
 use super::macros::reply_html;
 use crate::{
     database::{entities::chat::Chat, types::lang::Lang, Connection},
-    statics,
+    statics::{self, get_bilingual_str},
 };
 
 pub(super) async fn start(message: Message, bot: Bot, db_conn: Connection) -> ResponseResult<()> {
@@ -19,11 +19,7 @@ pub(super) async fn start(message: Message, bot: Bot, db_conn: Connection) -> Re
             return respond(());
         }
     } {
-        let text = match chat.lang {
-            Lang::Chinese => statics::GREETINGS_CHINESE,
-            Lang::English => statics::GREETINGS_ENGLISH,
-            Lang::Bilingual => statics::GREETINGS_BILINGUAL,
-        };
+        let text = get_bilingual_str!(chat.lang, GREETINGS);
         reply_html!(chat_id, message.id, text, bot)?;
 
         return respond(());
@@ -45,11 +41,7 @@ pub(super) async fn start(message: Message, bot: Bot, db_conn: Connection) -> Re
         return respond(());
     };
 
-    let text = match lang {
-        Lang::Bilingual => unreachable!(),
-        Lang::Chinese => statics::START_MESSAGE_CHINESE,
-        Lang::English => statics::START_MESSAGE_ENGLISH,
-    };
+    let text = lang.map("", statics::START_MESSAGE_CHINESE, statics::START_MESSAGE_ENGLISH);
     reply_html!(chat_id, message.id, text, bot)?;
 
     respond(())

@@ -1,10 +1,15 @@
 // Copyright (c) 2022 - 2024 GreenYun Organization
 // SPDX-License-Identifier: MIT
 
+use std::sync::OnceLock;
+
 use chrono::{DateTime, FixedOffset};
 use hko::weather::{warning::info::InfoDetail, Info};
+use tokio::sync::RwLock;
 
 use crate::tool::types::BilingualString;
+
+use super::{WeatherData, WeatherDataUpdater};
 
 #[derive(Clone, Default)]
 pub struct Piece {
@@ -62,10 +67,31 @@ pub struct Warning {
     pub pieces: Vec<Piece>,
 }
 
-impl super::WeatherData for Warning {
+static WARNING_STORE: OnceLock<RwLock<Warning>> = OnceLock::new();
+
+impl WeatherData for Warning {
+    async fn get() -> Option<Self> {
+        if let Some(lock) = WARNING_STORE.get() {
+            let lock = lock.read().await;
+            Some(lock.clone())
+        } else {
+            None
+        }
+    }
+}
+
+impl WeatherDataUpdater for Warning {
     type Source = Info;
 
-    const UPDATE_FN: fn() -> std::sync::Arc<tokio::sync::RwLock<Self>> = super::warning;
+    async fn update(chinese: Self::Source, english: Self::Source) {
+        let translated = Self::translate(chinese, english);
+        if let Some(lock) = WARNING_STORE.get() {
+            let mut lock = lock.write().await;
+            *lock = translated;
+        } else {
+            WARNING_STORE.set(RwLock::new(translated)).ok();
+        }
+    }
 
     fn translate(chinese: Self::Source, english: Self::Source) -> Self {
         Self {

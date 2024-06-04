@@ -4,7 +4,7 @@
 use teloxide::{dispatching::UpdateHandler, prelude::*, types::InlineQueryResult, RequestError};
 
 use crate::{
-    answer,
+    answer::{self, Answer, Briefing},
     database::types::lang::Lang,
     statics::{BRIEFING_TITLE_CHINESE, BRIEFING_TITLE_ENGLISH, BULLETIN_TITLE_CHINESE, BULLETIN_TITLE_ENGLISH},
     tool::ext::NonEmptyExt,
@@ -28,7 +28,7 @@ where
 async fn answer(query: InlineQuery, bot: Bot) -> ResponseResult<()> {
     let mut results = vec![];
 
-    if let Some(s) = answer::briefing(&Lang::Chinese).await.get_non_empty() {
+    if let Some(s) = Briefing::answer(&Lang::Chinese).await.get_non_empty() {
         results.push(new_result_article("briefing_zh", BRIEFING_TITLE_CHINESE, s));
     }
 
@@ -36,7 +36,7 @@ async fn answer(query: InlineQuery, bot: Bot) -> ResponseResult<()> {
         results.push(new_result_article("bulletin_zh", BULLETIN_TITLE_CHINESE, s));
     }
 
-    if let Some(s) = answer::briefing(&Lang::English).await.get_non_empty() {
+    if let Some(s) = Briefing::answer(&Lang::English).await.get_non_empty() {
         results.push(new_result_article("briefing_en", BRIEFING_TITLE_ENGLISH, s));
     }
 

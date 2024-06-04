@@ -8,15 +8,15 @@ use teloxide::{prelude::*, types::ParseMode, ApiError, RequestError};
 use super::macros::reply_html;
 use crate::{
     database::{entities::chat::Chat, types::lang::Lang},
-    statics,
-    tool::{mix_strings, try_data},
-    weather,
+    statics::get_bilingual_str,
+    tool::mix_strings,
+    weather::{Warning as Data, WeatherData},
 };
 
 pub(super) async fn warning(message: Message, bot: Bot, chat: Chat) -> ResponseResult<()> {
     let chat_id = message.chat.id;
 
-    let Some(warning) = try_data(weather::warning, |_| true).await else {
+    let Some(warning) = Data::get().await else {
         bot.send_message(chat_id, "Connection timed out, please try again later.")
             .reply_to_message_id(message.id)
             .await?;
@@ -24,21 +24,17 @@ pub(super) async fn warning(message: Message, bot: Bot, chat: Chat) -> ResponseR
     };
 
     if warning.pieces.is_empty() {
-        bot.send_message(chat_id, match &chat.lang {
-            Lang::Bilingual => statics::NO_WARNING_MESSAGE_BILINGUAL,
-            Lang::Chinese => statics::NO_WARNING_MESSAGE_CHINESE,
-            Lang::English => statics::NO_WARNING_MESSAGE_ENGLISH,
-        })
-        .parse_mode(ParseMode::Html)
-        .reply_to_message_id(message.id)
-        .await?;
+        bot.send_message(chat_id, get_bilingual_str!(chat.lang, NO_WARNING_MESSAGE))
+            .parse_mode(ParseMode::Html)
+            .reply_to_message_id(message.id)
+            .await?;
     }
 
     for w in warning.pieces {
         let mut list = vec!["<b>".to_string() + w.name + "</b>"];
         list.extend_from_slice(&w.contents);
 
-        let mut text = mix_strings(&list, &chat.lang);
+        let mut text = mix_strings(&chat.lang, &list);
         write!(text, "<i>@ {}</i>", w.update_time).ok();
 
         let send = reply_html!(chat_id, message.id, text, bot);
@@ -47,11 +43,11 @@ pub(super) async fn warning(message: Message, bot: Bot, chat: Chat) -> ResponseR
             Ok(_) => {}
             Err(RequestError::Api(ApiError::MessageIsTooLong)) => {
                 if matches!(chat.lang, Lang::Bilingual) {
-                    text = mix_strings(&list, &Lang::Chinese);
+                    text = mix_strings(&Lang::Chinese, &list);
                     write!(text, "<i>@ {}</i>", w.update_time).ok();
                     reply_html!(chat_id, message.id, text, bot)?;
 
-                    text = mix_strings(&list, &Lang::English);
+                    text = mix_strings(&Lang::English, &list);
                     write!(text, "<i>@ {}</i>", w.update_time).ok();
                     reply_html!(chat_id, message.id, text, bot)?;
                 }

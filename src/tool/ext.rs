@@ -7,20 +7,11 @@ pub trait NonEmptyExt {
     fn get_non_empty(self) -> Option<String>;
 }
 
-impl NonEmptyExt for String {
+impl<T> NonEmptyExt for T
+where
+    T: Into<String>,
+{
     fn get_non_empty(self) -> Option<String> {
-        Some(self).filter(|s| !s.is_empty())
-    }
-}
-
-impl NonEmptyExt for &str {
-    fn get_non_empty(self) -> Option<String> {
-        Some(self.to_string()).filter(|s| !s.is_empty())
-    }
-}
-
-impl NonEmptyExt for Option<String> {
-    fn get_non_empty(self) -> Option<String> {
-        self.filter(|s| !s.is_empty())
+        Some(self.into()).filter(|s| !s.is_empty())
     }
 }

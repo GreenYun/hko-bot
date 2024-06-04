@@ -3,11 +3,9 @@
 
 #![allow(dead_code)]
 
-use paste::paste;
-
 macro_rules! make_bilingual {
     ($var:ident, $zh_str:literal, $en_str:literal) => {
-        paste! {
+        ::paste::paste! {
             pub const [<$var _CHINESE>]: &str = $zh_str;
             pub const [<$var _ENGLISH>]: &str = $en_str;
             pub const [<$var _BILINGUAL>]: &str = concat!($zh_str, "\n", $en_str);
@@ -15,9 +13,27 @@ macro_rules! make_bilingual {
     };
 }
 
+macro_rules! get_bilingual_str {
+    ($lang:expr, $var:ident) => {
+        ::paste::paste! {
+             $lang.map (
+                $crate::statics::[<$var _CHINESE>],
+                $crate::statics::[<$var _CHINESE>],
+                $crate::statics::[<$var _CHINESE>],
+             )
+        }
+    };
+}
+
+pub(crate) use get_bilingual_str;
+
 // Server error messages
 
-pub const SERVER_ERROR_TIMEDOUT: &str = "Connection timed out, please try again later.";
+make_bilingual!(
+    SERVER_ERROR_TIMEDOUT,
+    "連線逾時，請稍後再試。",
+    "Connection timed out, please try again later."
+);
 
 // Start messages
 

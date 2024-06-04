@@ -5,103 +5,106 @@ use std::{any::type_name, sync::Arc};
 
 use tokio::{
     signal,
-    sync::Mutex,
-    time::{sleep, Duration},
+    sync::Notify,
+    time::{self, Duration},
 };
 
+mod macros;
+
 macros::weather_mods! {
-    mod briefing;
-    mod bulletin;
-    mod warning;
+    pub mod briefing;
+    pub mod bulletin;
+    pub mod warning;
     const ALL_UPDATERS: [&Updater; COUNT];
 }
 
-trait WeatherData {
+#[allow(clippy::module_name_repetitions)]
+pub trait WeatherData: std::marker::Sized {
+    async fn get() -> Option<Self>;
+}
+
+#[allow(clippy::module_name_repetitions)]
+trait WeatherDataUpdater {
     type Source;
-    const UPDATE_FN: fn() -> std::sync::Arc<tokio::sync::RwLock<Self>>;
+
+    async fn update(chinese: Self::Source, english: Self::Source);
     fn translate(chinese: Self::Source, english: Self::Source) -> Self;
 }
 
-trait AsyncUpdater {
-    async fn update();
-}
-
-impl<T> AsyncUpdater for T
+// This allow notation is not good, but we are trying to not to use the
+// incomplete feature "return_type_notation".
+#[allow(clippy::future_not_send)]
+async fn update_data<T>()
 where
-    T: WeatherData + Send + Sync,
-    T::Source: hko::Fetch + Send,
+    T: WeatherDataUpdater<Source: hko::Fetch + Send> + Send + Sync,
+    // T: WeatherDataUpdater<Source: hko::Fetch + Send, update(): Send> + Send + Sync,
 {
-    async fn update() {
-        use hko::{common::Lang, fetch};
+    use hko::{common::Lang, fetch};
 
-        log::debug!("updating {}", type_name::<T>());
+    log::debug!("updating {}", type_name::<T>());
 
-        let chinese = match fetch(Lang::TC).await {
-            Ok(data) => data,
-            Err(e) => {
-                log::error!("failed to fetch Chinese weather data: {}", e);
-                return;
-            }
-        };
-
-        let english = match fetch(Lang::EN).await {
-            Ok(data) => data,
-            Err(e) => {
-                log::error!("failed to fetch English weather data: {}", e);
-                return;
-            }
-        };
-
-        let translated = T::translate(chinese, english);
-
-        {
-            let arc = Self::UPDATE_FN();
-            let mut lock = arc.write().await;
-            *lock = translated;
+    let chinese = match fetch(Lang::TC).await {
+        Ok(data) => data,
+        Err(e) => {
+            log::error!("failed to fetch Chinese weather data: {}", e);
+            return;
         }
-    }
+    };
+
+    let english = match fetch(Lang::EN).await {
+        Ok(data) => data,
+        Err(e) => {
+            log::error!("failed to fetch English weather data: {}", e);
+            return;
+        }
+    };
+
+    T::update(chinese, english).await;
 }
 
 pub async fn update() {
     const UPDATE_PERIOD: u64 = 300;
 
-    let mutex = Arc::new(Mutex::new(false));
-    let inner_mutex = mutex.clone();
+    let dead_notify = Arc::new(Notify::new());
 
-    tokio::spawn(async move {
-        {
-            let _ = inner_mutex.lock().await;
+    let handle = {
+        let dead_notify = dead_notify.clone();
+        tokio::spawn(async move {
+            let notified = dead_notify.notified();
+            tokio::pin!(notified);
+
             for updater in ALL_UPDATERS {
-                updater().await.ok();
-            }
-        }
-
-        let mut iter = ALL_UPDATERS.into_iter().cycle();
-        loop {
-            {
-                let will_die = inner_mutex.lock().await;
-                if *will_die {
+                if notified.as_mut().enable() {
                     log::info!("weather updater is shut down");
                     return;
-                } else if let Some(f) = iter.next() {
+                }
+
+                updater().await.ok();
+            }
+
+            let mut iter = ALL_UPDATERS.into_iter().cycle();
+            loop {
+                const SLEEP_TIME: Duration = Duration::from_secs(UPDATE_PERIOD / (COUNT as u64));
+                let to = time::timeout(SLEEP_TIME, notified.as_mut()).await;
+
+                if to.is_ok() {
+                    log::info!("weather updater is shut down");
+                    return;
+                }
+
+                if let Some(f) = iter.next() {
                     f().await.ok();
                 }
             }
-
-            sleep(Duration::from_secs(UPDATE_PERIOD / (COUNT as u64))).await;
-        }
-    });
+        })
+    };
 
     if let Err(e) = signal::ctrl_c().await {
         log::error!("failed to listen for ctrl-c: {}", e);
     }
 
-    {
-        let mut will_die = mutex.lock().await;
-        *will_die = true;
-    }
-
+    time::sleep(Duration::from_secs(1)).await;
+    dead_notify.notify_waiters();
     log::info!("Weather updater shutdown signal sent");
+    tokio::join!(handle).0.ok();
 }
-
-mod macros;
