@@ -4,14 +4,17 @@
 #![allow(clippy::module_name_repetitions)]
 
 pub trait NonEmptyExt {
-    fn get_non_empty(self) -> Option<String>;
+	fn get_non_empty(self) -> Option<String>;
 }
 
-impl<T> NonEmptyExt for T
-where
-    T: Into<String>,
-{
-    fn get_non_empty(self) -> Option<String> {
-        Some(self.into()).filter(|s| !s.is_empty())
-    }
+impl NonEmptyExt for String {
+	fn get_non_empty(self) -> Option<String> {
+		Some(self).filter(|s| !s.is_empty())
+	}
+}
+
+impl NonEmptyExt for Vec<String> {
+	fn get_non_empty(self) -> Option<String> {
+		self.first().and_then(|s| s.clone().get_non_empty())
+	}
 }

@@ -7,3 +7,4 @@
 
 run.sh
 Cargo.lock
+/.cargo

@@ -11,24 +11,24 @@ use strum::EnumString;
 #[sqlx(type_name = "lang")]
 #[strum(ascii_case_insensitive)]
 pub enum Lang {
-    Bilingual,
-    Chinese,
-    English,
+	Bilingual,
+	Chinese,
+	English,
 }
 
 impl Lang {
-    #[inline]
-    pub fn map<T>(&self, bilingual: T, chinese: T, english: T) -> T {
-        match self {
-            Self::Bilingual => bilingual,
-            Self::Chinese => chinese,
-            Self::English => english,
-        }
-    }
+	#[inline]
+	pub fn map<T>(&self, bilingual: T, chinese: T, english: T) -> T {
+		match self {
+			Self::Bilingual => bilingual,
+			Self::Chinese => chinese,
+			Self::English => english,
+		}
+	}
 }
 
 impl Display for Lang {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        f.write_str(self.map("雙語 Bilingual", "中文", "English"))
-    }
+	fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+		f.write_str(self.map("雙語 Bilingual", "中文", "English"))
+	}
 }

@@ -1,16 +1,23 @@
 // Copyright (c) 2024 GreenYun Organization
 // SPDX-License-Identifier: MIT
 
-use std::fmt::Write;
+use std::{fmt::Write, sync::OnceLock};
 
-use chrono::Timelike;
+use chrono::{DateTime, FixedOffset, Timelike as _};
+use tokio::sync::RwLock;
 
 use crate::{
-    database::types::lang::Lang,
-    statics::get_bilingual_str,
-    tool::{data::out_dated, mix_strings, types::BilingualString},
-    weather::{Bulletin as Data, WeatherData},
+	database::types::lang::Lang,
+	statics::get_bilingual_str,
+	tool::{
+		data::out_dated,
+		mix_string, mix_strings,
+		types::{BilingualStr, BilingualString},
+	},
+	weather::{Bulletin as Data, WeatherData as _},
 };
+
+use super::{Answer, AnswerStore};
 
 #[rustfmt::skip]
 macro_rules! ch_num {
@@ -28,8 +35,151 @@ macro_rules! ch_num {
     (12) => ("十二");
 }
 
+static ANSWER_BI: OnceLock<RwLock<AnswerStore>> = OnceLock::new();
+static ANSWER_EN: OnceLock<RwLock<AnswerStore>> = OnceLock::new();
+static ANSWER_ZH: OnceLock<RwLock<AnswerStore>> = OnceLock::new();
+
+pub struct Bulletin;
+
+impl Answer for Bulletin {
+	async fn answer(lang: &Lang) -> Vec<String> {
+		update_and_get(lang).await
+	}
+}
+
+pub async fn update_and_get(lang: &Lang) -> Vec<String> {
+	let ol = lang.map(&ANSWER_BI, &ANSWER_ZH, &ANSWER_EN);
+	let rl = ol.get_or_init(|| RwLock::new(AnswerStore::default()));
+
+	let old = {
+		let old = rl.read().await;
+		old.clone()
+	};
+
+	update(lang, &old.update_time).await.map_or(old.inner, |new| new.inner)
+}
+
+pub async fn update(lang: &Lang, last_update: &DateTime<FixedOffset>) -> Option<AnswerStore> {
+	let data = Data::get().await;
+
+	let Some(data) = data else {
+		return AnswerStore {
+			inner: vec![get_bilingual_str!(lang, SERVER_ERROR_TIMEDOUT).into()],
+			update_time: DateTime::UNIX_EPOCH.into(),
+		}
+		.into();
+	};
+
+	if out_dated(data.update_time.to_utc()) {
+		return None;
+	}
+
+	if last_update >= &data.update_time {
+		return None;
+	}
+
+	let update_time = data.update_time;
+
+	let inner = to_string(&data, lang);
+	let inner = vec![inner];
+	let store = AnswerStore { inner, update_time };
+	{
+		let ol = lang.map(&ANSWER_BI, &ANSWER_ZH, &ANSWER_EN);
+		let rl = ol.get_or_init(|| RwLock::new(AnswerStore::default()));
+		let mut w = rl.write().await;
+		*w = store.clone();
+	}
+
+	store.into()
+}
+
+fn to_string(data: &Data, lang: &Lang) -> String {
+	static SPECIAL_WEATHER_TIPS: BilingualStr =
+		BilingualStr { chinese: "<b>特別天氣提示：</b>", english: "<b>Special Weather Tips:</b>" };
+	static WEATHER_WARNING: BilingualStr =
+		BilingualStr { chinese: "<b>請注意：</b>", english: "<b>Please be reminded that:</b>" };
+
+	let (pm, hour12) = data.update_time.time().hour12();
+	let chi_hour = chinese_hour(pm, hour12);
+	let eng_hour = english_hour(pm, hour12);
+
+	let (chi_temp, chi_uv) = if matches!(lang, Lang::English) {
+		(String::new(), String::new())
+	} else {
+		let chi_weather_desc = data.weather_icon.iter().map(|n| format!("{n:o}")).collect::<Vec<_>>().join("\u{ff1b}");
+		let chi_temp = format!(
+			"\
+			{chi_hour}香港天文台錄得：\n\
+        	氣溫：<b>{}</b> 度\n\
+        	相對濕度：百分之 <b>{}</b>\n\
+        	<b>{chi_weather_desc}</b>",
+			data.temperature, data.humidity,
+		);
+		let chi_uv = data.uv_index.clone().map_or_else(String::new, |uv_index| {
+			format!(
+				"\
+				{:x}：\n\
+            	京士柏錄得的平均紫外線指數：<b>{}</b>\n\
+            	紫外線強度：<b>{:x}</b>",
+				uv_index.period, uv_index.value, uv_index.desc
+			)
+		});
+		(chi_temp, chi_uv)
+	};
+
+	let (eng_temp, eng_uv) = if matches!(lang, Lang::Chinese) {
+		(String::new(), String::new())
+	} else {
+		let eng_weather_desc = data.weather_icon.iter().map(|n| format!("{n:e}")).collect::<Vec<_>>().join("; ");
+		let eng_temp = format!(
+			"\
+			At {eng_hour} at Hong Kong Observatory:\n\
+    		Air temperature: <b>{}</b> degrees Celsius\n\
+        	Relative humidity: <b>{}</b> per cent\n\
+        	<b>{eng_weather_desc}</b>",
+			data.temperature, data.humidity,
+		);
+		let eng_uv = data.uv_index.clone().map_or_else(String::new, |uv_index| {
+			format!(
+				"\
+				{:e}:\n\
+             	The mean UV Index recorded at King's Park: <b>{}</b>\n\
+             	Intensity of UV radiation: <b>{:e}</b>",
+				uv_index.period, uv_index.value, uv_index.desc
+			)
+		});
+		(eng_temp, eng_uv)
+	};
+
+	let mut text = mix_strings(lang, &[
+		BilingualString::new(chi_temp, eng_temp).add_single_newline(),
+		BilingualString::new(chi_uv, eng_uv).add_single_newline(),
+		data.rainstorm_reminder.clone(),
+	]);
+	text.reserve(4096 - text.len());
+
+	if !data.special_tips.is_empty() {
+		write!(text, "\n\n{}\n\n{}", &mix_string(lang, &SPECIAL_WEATHER_TIPS), &mix_strings(lang, &data.special_tips))
+			.ok();
+	}
+
+	if !data.warning.is_empty() {
+		write!(text, "\n\n{}\n\n{}", mix_string(lang, &WEATHER_WARNING), mix_strings(lang, &data.warning)).ok();
+	}
+
+	if !data.tropical_cyclone.is_empty() {
+		write!(text, "\n\n{}", &mix_strings(lang, &data.tropical_cyclone)).ok();
+	}
+
+	write!(text, "\n\n<i>@ {}</i>", data.update_time).ok();
+
+	text.shrink_to_fit();
+
+	text
+}
+
 const fn chinese_hour(pm: bool, hour12: u32) -> &'static str {
-    macro_rules! fmt_zh_hour {
+	macro_rules! fmt_zh_hour {
         {$desc:literal | $pm:literal in [$($hour:tt)+]} => {
             $(
                 if pm == $pm && hour12 == $hour {
@@ -39,18 +189,18 @@ const fn chinese_hour(pm: bool, hour12: u32) -> &'static str {
         };
     }
 
-    fmt_zh_hour! {"午夜" | false in [12]}
-    fmt_zh_hour! {"凌晨" | false in [1 2 3 4 5]}
-    fmt_zh_hour! {"上午" | false in [6 7 8 9 10 11]}
-    fmt_zh_hour! {"正午" | true in [12]}
-    fmt_zh_hour! {"下午" | true in [1 2 3 4 5]}
-    fmt_zh_hour! {"傍晚" | true in [6]}
-    fmt_zh_hour! {"晚上" | true in [7 8 9 10 11]}
-    unreachable!()
+	fmt_zh_hour! {"午夜" | false in [12]}
+	fmt_zh_hour! {"凌晨" | false in [1 2 3 4 5]}
+	fmt_zh_hour! {"上午" | false in [6 7 8 9 10 11]}
+	fmt_zh_hour! {"正午" | true in [12]}
+	fmt_zh_hour! {"下午" | true in [1 2 3 4 5]}
+	fmt_zh_hour! {"傍晚" | true in [6]}
+	fmt_zh_hour! {"晚上" | true in [7 8 9 10 11]}
+	unreachable!()
 }
 
 const fn english_hour(pm: bool, hour12: u32) -> &'static str {
-    macro_rules! fmt_en_hour {
+	macro_rules! fmt_en_hour {
         {$desc:literal | $pm:literal in [$($hour:tt)+]} => {
             $(
                 if pm == $pm && hour12 == $hour {
@@ -60,139 +210,7 @@ const fn english_hour(pm: bool, hour12: u32) -> &'static str {
         };
     }
 
-    fmt_en_hour! {"a.m." | false in [12 1 2 3 4 5 6 7 8 9 10 11]}
-    fmt_en_hour! {"p.m." | true in [12 1 2 3 4 5 6 7 8 9 10 11]}
-    unreachable!()
-}
-
-fn uv_desc(i: f32) -> BilingualString {
-    #[allow(clippy::cast_possible_truncation)]
-    #[allow(clippy::cast_sign_loss)]
-    let i = i as u32;
-    match i {
-        0..=2 => BilingualString::new("低", "Low"),
-        3..=5 => BilingualString::new("中", "Moderate"),
-        6..=7 => BilingualString::new("高", "High"),
-        8..=10 => BilingualString::new("甚高", "Very high"),
-        _ => BilingualString::new("極高", "Extreme"),
-    }
-}
-
-#[allow(clippy::too_many_lines)]
-pub async fn to_string(lang: &Lang) -> String {
-    let Some(bulletin) = Data::get().await else {
-        return get_bilingual_str!(lang, SERVER_ERROR_TIMEDOUT).into();
-    };
-
-    if out_dated(bulletin.update_time.to_utc()) {
-        return get_bilingual_str!(lang, SERVER_ERROR_TIMEDOUT).into();
-    }
-
-    let (pm, hour12) = bulletin.update_time.time().hour12();
-    let chi_hour = chinese_hour(pm, hour12);
-    let eng_hour = english_hour(pm, hour12);
-
-    let chi_weather_desc = bulletin
-        .weather_icon
-        .iter()
-        .map(|n| format!("{n:o}"))
-        .collect::<Vec<_>>()
-        .join("\u{ff1b}");
-    let eng_weather_desc = bulletin
-        .weather_icon
-        .iter()
-        .map(|n| format!("{n:e}"))
-        .collect::<Vec<_>>()
-        .join("; ");
-
-    let uv_desc = bulletin.uv_index.map(uv_desc).unwrap_or_default();
-
-    let mut chi_text1 = format!(
-        "{chi_hour}香港天文台錄得：\n\
-         氣溫：<b>{}</b> 度\n\
-         相對濕度：百分之 <b>{}</b>\n\
-         <b>{chi_weather_desc}</b>",
-        bulletin.temperature, bulletin.humidity,
-    );
-    if let Some(uv_index) = bulletin.uv_index {
-        chi_text1 += &format!(
-            "\n\n\
-             過去一小時：\n\
-             京士柏錄得的平均紫外線指數：<b>{uv_index}</b>\n\
-             紫外線強度屬於<b>{uv_desc:x}</b>",
-        );
-    }
-
-    let mut eng_text1 = format!(
-        "At {eng_hour} at Hong Kong Observatory:\n\
-         Temperature: <b>{}</b> degrees Celsius\n\
-         Relative humidity: <b>{}</b> per cent\n\
-         <b>{eng_weather_desc}</b>",
-        bulletin.temperature, bulletin.humidity,
-    );
-    if let Some(uv_index) = bulletin.uv_index {
-        eng_text1 += &format!(
-            "\n\n\
-             During the past hour:\n\
-             The mean UV Index recorded at King's Park: <b>{uv_index}</b>\n\
-             The intensity of UV radiation is <b>{uv_desc:e}</b>",
-        );
-    }
-
-    let text1 = BilingualString {
-        chinese: chi_text1,
-        english: eng_text1,
-    };
-
-    let (chi_special_tips, eng_special_tips) = bulletin
-        .special_tips
-        .into_iter()
-        .map(|s| (s.chinese, s.english))
-        .unzip::<_, _, Vec<_>, Vec<_>>();
-    let chi_special_tips = chi_special_tips.join("\n\n");
-    let eng_special_tips = eng_special_tips.join("\n\n");
-    let special_tips = BilingualString {
-        chinese: chi_special_tips,
-        english: eng_special_tips,
-    };
-
-    let warning = mix_strings(lang, &bulletin.warning);
-
-    let (chi_tc, eng_tc) = bulletin
-        .tropical_cyclone
-        .into_iter()
-        .map(|s| (s.chinese, s.english))
-        .unzip::<_, _, Vec<_>, Vec<_>>();
-    let chi_tc = chi_tc.join("\n\n");
-    let eng_tc = eng_tc.join("\n\n");
-    let tropical_cyclone = BilingualString {
-        chinese: chi_tc,
-        english: eng_tc,
-    };
-
-    let mut text = mix_strings(lang, &[
-        text1.add_single_newline(),
-        (!special_tips.is_empty())
-            .then_some(BilingualString::new(
-                "<b>特別天氣提示：</b>",
-                "<b>Special Weather Tips:</b>",
-            ))
-            .unwrap_or_default(),
-        special_tips.add_single_newline(),
-        (!warning.is_empty())
-            .then_some(BilingualString::new(
-                "<b>請注意：</b>",
-                "<b>Please be reminded that:</b>",
-            ))
-            .unwrap_or_default(),
-    ]);
-    text += &warning;
-    text += &mix_strings(lang, &[
-        tropical_cyclone.add_single_newline(),
-        bulletin.rainstorm_reminder.add_single_newline(),
-    ]);
-
-    write!(text, "<i>@ {}</i>", bulletin.update_time).ok();
-
-    text
+	fmt_en_hour! {"a.m." | false in [12 1 2 3 4 5 6 7 8 9 10 11]}
+	fmt_en_hour! {"p.m." | true in [12 1 2 3 4 5 6 7 8 9 10 11]}
+	unreachable!()
 }

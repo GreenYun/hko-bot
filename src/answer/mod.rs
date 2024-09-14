@@ -5,16 +5,22 @@ use chrono::{DateTime, FixedOffset};
 
 #[derive(Clone, Default)]
 struct AnswerStore {
-    inner: String,
-    update_time: DateTime<FixedOffset>,
+	inner: Vec<String>,
+	update_time: DateTime<FixedOffset>,
+}
+
+impl AnswerStore {
+	const fn new(inner: Vec<String>, update_time: DateTime<FixedOffset>) -> Self {
+		Self { inner, update_time }
+	}
 }
 
 pub trait Answer {
-    async fn answer(lang: &Lang) -> String;
+	async fn answer(lang: &Lang) -> Vec<String>;
 }
 
 pub use briefing::Briefing;
-pub use bulletin::to_string as bulletin;
+pub use bulletin::Bulletin;
 pub use setlang::to_string as setlang;
 
 use crate::database::types::lang::Lang;

@@ -1,50 +1,55 @@
 // Copyright (c) 2022 - 2024 GreenYun Organization
 // SPDX-License-Identifier: MIT
 
-use std::io::Write;
-
 use env_logger::TimestampPrecision;
 use log::LevelFilter;
+use syslog::Facility;
 
 fn get_lowercase_env_var(key: &str) -> Option<String> {
-    std::env::var_os(key).map(|s| s.to_string_lossy().to_ascii_lowercase())
+	std::env::var_os(key).map(|s| s.to_string_lossy().to_ascii_lowercase())
 }
 
-pub fn logging() {
-    let level = get_lowercase_env_var("HKO_BOT_LOG_LEVEL").map_or(LevelFilter::Info, |s| match s.as_str() {
-        "err" | "error" | "1" => LevelFilter::Error,
-        "warn" | "warning" | "2" => LevelFilter::Warn,
-        "info" | "3" => LevelFilter::Info,
-        "debug" | "4" => LevelFilter::Debug,
-        "trace" | "5" => LevelFilter::Trace,
-        _ => LevelFilter::Off,
-    });
+pub fn crypto_init() {
+	match rustls::crypto::aws_lc_rs::default_provider().install_default() {
+		Ok(()) => {}
+		Err(e) => {
+			log::error!("CrytoProvider Error: {e:?}");
+			panic!("CrytoProvider Error: {e:?}");
+		}
+	}
+}
 
-    let mut is_display_time = get_lowercase_env_var("HKO_BOT_LOG_TIME")
-        .is_some_and(|s| !s.is_empty() && !matches!(s.as_str(), "0" | "false" | "no"));
+pub fn logger_init() {
+	let level = get_lowercase_env_var("HKO_BOT_LOG_LEVEL").map_or(LevelFilter::Info, |s| match s.as_str() {
+		"err" | "error" | "1" => LevelFilter::Error,
+		"warn" | "warning" | "2" => LevelFilter::Warn,
+		"info" | "3" => LevelFilter::Info,
+		"debug" | "4" => LevelFilter::Debug,
+		"trace" | "5" => LevelFilter::Trace,
+		_ => LevelFilter::Off,
+	});
 
-    let is_syslog_style = get_lowercase_env_var("HKO_BOT_LOG_STYLE").is_some_and(|s| s == "syslog");
+	let is_syslog_style = get_lowercase_env_var("HKO_BOT_LOG_STYLE").is_some_and(|s| s == "syslog");
 
-    let mut builder = env_logger::builder();
+	if is_syslog_style && syslog_init(level).is_ok() {
+		return;
+	}
 
-    if is_syslog_style {
-        is_display_time = false;
-        builder.format(|buf, record| {
-            use log::Level;
+	let show_time = get_lowercase_env_var("HKO_BOT_LOG_TIME")
+		.is_some_and(|s| !s.is_empty() && !matches!(s.as_str(), "0" | "false" | "no"));
+	env_logger_init(show_time, level);
+}
 
-            let syslog_level = match record.level() {
-                Level::Error => 3,
-                Level::Warn => 4,
-                Level::Info => 6,
-                Level::Debug | Level::Trace => 7,
-            };
-            writeln!(buf, "<{syslog_level}>[{}] {}", record.target(), record.args())
-        });
-    }
+fn syslog_init(level: LevelFilter) -> syslog::Result<()> {
+	syslog::init_unix(Facility::LOG_LOCAL7, level)
+}
 
-    builder
-        .format_timestamp(is_display_time.then_some(TimestampPrecision::Seconds))
-        .write_style(env_logger::fmt::WriteStyle::Auto)
-        .filter_level(level)
-        .init();
+fn env_logger_init(show_time: bool, level: LevelFilter) {
+	let mut builder = env_logger::builder();
+
+	builder
+		.format_timestamp(show_time.then_some(TimestampPrecision::Seconds))
+		.write_style(env_logger::fmt::WriteStyle::Auto)
+		.filter_level(level)
+		.init();
 }

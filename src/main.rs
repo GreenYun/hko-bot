@@ -1,29 +1,28 @@
 // Copyright (c) 2022 - 2024 GreenYun Organization
 // SPDX-License-Identifier: MIT
 
-// Trying to no to use incomplete features
-// #![allow(incomplete_features)]
-// #![feature(return_type_notation)]
-
 pub const NAME_VERSION_STRING: &str = concat!(env!("CARGO_PKG_NAME"), " ", env!("CARGO_PKG_VERSION"));
 
 #[tokio::main]
 async fn main() {
-    let args = args::Args::new();
+	let args = args::Args::new();
 
-    config::logging();
-    log::info!("{NAME_VERSION_STRING}");
+	config::logger_init();
+	log::info!("{NAME_VERSION_STRING}");
 
-    let db = database::connect(args.db_uri).await;
-    let mut tg = telegram::connect(args.bot, db).await;
+	config::crypto_init();
 
-    tokio::join!(weather::update(), tg.dispatch());
+	let db = database::connect(args.db_uri).await;
+	let mut tg = telegram::connect(args.bot, db);
+
+	tokio::join!(weather::update(), tg.dispatch());
 }
 
 mod answer;
 mod args;
 mod config;
 mod database;
+mod http;
 mod statics;
 mod telegram;
 mod tool;

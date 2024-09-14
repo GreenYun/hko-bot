@@ -36,12 +36,9 @@ macro_rules! command_endpoint {
 }
 
 macro_rules! reply_html {
-    ($to:expr, $on:expr, $text:expr, $bot:expr) => {
-        $bot.send_message($to, $text)
-            .parse_mode(ParseMode::Html)
-            .reply_to_message_id($on)
-            .await
-    };
+	($to:expr, $on:expr, $text:expr, $bot:expr) => {
+		$bot.send_message($to, $text).parse_mode(ParseMode::Html).reply_parameters(::teloxide::types::ReplyParameters::new($on)).await
+	};
 }
 
 pub(super) use command_endpoint;
