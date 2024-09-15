@@ -38,7 +38,7 @@ pub(super) async fn warning(message: Message, bot: Bot, chat: Chat) -> ResponseR
 		list.extend_from_slice(&w.contents);
 
 		let mut text = mix_strings(&chat.lang, &list);
-		write!(text, "<i>@ {}</i>", w.update_time).ok();
+		write!(text, "\n\n<i>@ {}</i>", w.update_time).ok();
 
 		let send = reply_html!(chat_id, message.id, text, bot);
 
@@ -47,11 +47,11 @@ pub(super) async fn warning(message: Message, bot: Bot, chat: Chat) -> ResponseR
 			Err(RequestError::Api(ApiError::MessageIsTooLong)) => {
 				if matches!(chat.lang, Lang::Bilingual) {
 					text = mix_strings(&Lang::Chinese, &list);
-					write!(text, "<i>@ {}</i>", w.update_time).ok();
+					write!(text, "\n\n<i>@ {}</i>", w.update_time).ok();
 					reply_html!(chat_id, message.id, text, bot)?;
 
 					text = mix_strings(&Lang::English, &list);
-					write!(text, "<i>@ {}</i>", w.update_time).ok();
+					write!(text, "\n\n<i>@ {}</i>", w.update_time).ok();
 					reply_html!(chat_id, message.id, text, bot)?;
 				}
 			}
