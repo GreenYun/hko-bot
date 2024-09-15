@@ -6,9 +6,9 @@
 macro_rules! make_bilingual {
 	($var:ident, $zh_str:literal, $en_str:literal) => {
 		::paste::paste! {
+			pub const [<$var _BILINGUAL>]: &str = concat!($zh_str, "\n", $en_str);
 			pub const [<$var _CHINESE>]: &str = $zh_str;
 			pub const [<$var _ENGLISH>]: &str = $en_str;
-			pub const [<$var _BILINGUAL>]: &str = concat!($zh_str, "\n", $en_str);
 		}
 	};
 }
@@ -17,9 +17,9 @@ macro_rules! get_bilingual_str {
 	($lang:expr, $var:ident) => {
 		::paste::paste! {
 			 $lang.map(
+				$crate::statics::[<$var _BILINGUAL>],
 				$crate::statics::[<$var _CHINESE>],
 				$crate::statics::[<$var _ENGLISH>],
-				$crate::statics::[<$var _BILINGUAL>],
 			 )
 		}
 	};
