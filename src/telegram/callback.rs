@@ -1,4 +1,4 @@
-// Copyright (c) 2022 - 2023 GreenYun Organization
+// Copyright (c) 2022 - 2024 GreenYun Organization
 // SPDX-License-identifier: MIT
 
 use teloxide::{dispatching::UpdateHandler, prelude::*, utils::command::BotCommands, RequestError};
