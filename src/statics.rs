@@ -16,10 +16,10 @@ macro_rules! make_bilingual {
 macro_rules! get_bilingual_str {
 	($lang:expr, $var:ident) => {
 		::paste::paste! {
-			 $lang.map (
+			 $lang.map(
 				$crate::statics::[<$var _CHINESE>],
-				$crate::statics::[<$var _CHINESE>],
-				$crate::statics::[<$var _CHINESE>],
+				$crate::statics::[<$var _ENGLISH>],
+				$crate::statics::[<$var _BILINGUAL>],
 			 )
 		}
 	};

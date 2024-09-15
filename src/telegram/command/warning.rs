@@ -3,7 +3,11 @@
 
 use std::fmt::Write;
 
-use teloxide::{prelude::*, types::{ParseMode, ReplyParameters}, ApiError, RequestError};
+use teloxide::{
+	prelude::*,
+	types::{ParseMode, ReplyParameters},
+	ApiError, RequestError,
+};
 
 use super::macros::reply_html;
 use crate::{
@@ -18,15 +22,14 @@ pub(super) async fn warning(message: Message, bot: Bot, chat: Chat) -> ResponseR
 
 	let Some(warning) = Data::get().await else {
 		bot.send_message(chat_id, "Connection timed out, please try again later.")
-			.reply_parameters(ReplyParameters::new( message.id))
+			.reply_parameters(ReplyParameters::new(message.id))
 			.await?;
 		return respond(());
 	};
 
 	if warning.pieces.is_empty() {
 		bot.send_message(chat_id, get_bilingual_str!(chat.lang, NO_WARNING_MESSAGE))
-			.parse_mode(ParseMode::Html)
-			.reply_parameters(ReplyParameters::new( message.id))
+			.reply_parameters(ReplyParameters::new(message.id))
 			.await?;
 	}
 

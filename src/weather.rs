@@ -3,11 +3,14 @@
 
 use std::{any::type_name, sync::Arc};
 
+use hko::{common::Lang, fetch_with_client};
 use tokio::{
 	signal,
 	sync::Notify,
 	time::{self, Duration},
 };
+
+use crate::http;
 
 mod macros;
 
@@ -28,7 +31,6 @@ trait WeatherDataUpdater {
 	type Source;
 
 	async fn update(chinese: Self::Source, english: Self::Source);
-	// fn translate(chinese: Self::Source, english: Self::Source) -> Self;
 }
 
 // This allow notation is not good, but we are trying to not to use the
@@ -40,31 +42,19 @@ where
 	T::Source: hko::Fetch + Send,
 	// T::update(): Send,
 {
-	use hko::{common::Lang, fetch_with_client};
-
-	use crate::http;
-
 	let client = http::client();
 
 	log::debug!("updating {}", type_name::<T>());
 
-	let chinese = match fetch_with_client(Lang::TC, client.clone()).await {
-		Ok(data) => data,
-		Err(e) => {
-			log::error!("failed to fetch Chinese weather data: {}", e);
-			return;
-		}
-	};
+	let chinese = fetch_with_client(Lang::TC, client.clone()).await;
 
-	let english = match fetch_with_client(Lang::EN, client).await {
-		Ok(data) => data,
-		Err(e) => {
-			log::error!("failed to fetch English weather data: {}", e);
-			return;
-		}
-	};
+	let english = fetch_with_client(Lang::EN, client).await;
 
-	T::update(chinese, english).await;
+	if let (Ok(chinese), Ok(english)) = (chinese, english) {
+		T::update(chinese, english).await;
+	} else {
+		log::error!("failed to fetch data for {}", type_name::<T>());
+	}
 }
 
 pub async fn update() {
@@ -80,15 +70,14 @@ pub async fn update() {
 
 			for updater in ALL_UPDATERS {
 				if notified.as_mut().enable() {
-					log::info!("Weather updater is shut down");
+					log::info!("weather updater is shut down");
 					return;
 				}
 
 				updater().await.ok();
 			}
 
-			let mut iter = ALL_UPDATERS.into_iter().cycle();
-			loop {
+			for updater in ALL_UPDATERS.into_iter().cycle() {
 				const SLEEP_TIME: Duration = Duration::from_secs(UPDATE_PERIOD / (COUNT as u64));
 				let to = time::timeout(SLEEP_TIME, notified.as_mut()).await;
 
@@ -97,9 +86,7 @@ pub async fn update() {
 					return;
 				}
 
-				if let Some(f) = iter.next() {
-					f().await.ok();
-				}
+				updater().await.ok();
 			}
 		})
 	};
@@ -110,6 +97,6 @@ pub async fn update() {
 
 	time::sleep(Duration::from_secs(1)).await;
 	dead_notify.notify_waiters();
-	log::info!("Weather updater shutdown signal sent");
+	log::info!("weather updater shutdown signal sent");
 	tokio::join!(handle).0.ok();
 }
