@@ -1,10 +1,7 @@
 // Copyright (c) 2024 GreenYun Organization
 // SPDX-License-Identifier: MIT
 
-use std::{fmt::Write, sync::OnceLock};
-
-use chrono::{DateTime, FixedOffset};
-use tokio::sync::RwLock;
+use std::{fmt::Write, sync::LazyLock};
 
 use crate::{
 	database::types::lang::Lang,
@@ -13,56 +10,33 @@ use crate::{
 	weather::{Briefing as Data, WeatherData as _},
 };
 
-use super::{Answer, AnswerStore};
+use super::{Answer, AnswerEntry, AnswerStore};
 
-static ANSWER_BI: OnceLock<RwLock<AnswerStore>> = OnceLock::new();
-static ANSWER_EN: OnceLock<RwLock<AnswerStore>> = OnceLock::new();
-static ANSWER_ZH: OnceLock<RwLock<AnswerStore>> = OnceLock::new();
+static ANSWER: LazyLock<AnswerStore> = LazyLock::new(AnswerStore::default);
 
 pub struct Briefing;
 
 impl Answer for Briefing {
 	async fn answer(lang: &Lang) -> Vec<String> {
-		update_and_get(lang).await
+		let entry = ANSWER.update_and_get(lang, update).await;
+		entry.inner
 	}
 }
 
-pub async fn update_and_get(lang: &Lang) -> Vec<String> {
-	let ol = lang.map(&ANSWER_BI, &ANSWER_ZH, &ANSWER_EN);
-	let answer = ol.get_or_init(|| RwLock::new(AnswerStore::default()));
+async fn update(lang: &Lang, entry: AnswerEntry) -> AnswerEntry {
+	let timeout_err = get_bilingual_str!(lang, SERVER_ERROR_TIMEDOUT);
 
-	let old = {
-		let old = answer.read().await;
-		old.clone()
-	};
-
-	if let Some(new) = update(lang, &old.update_time).await {
-		let mut answer = answer.write().await;
-		*answer = new;
-		return answer.inner.clone();
-	}
-
-	old.inner
-}
-
-pub async fn update(lang: &Lang, last_update: &DateTime<FixedOffset>) -> Option<AnswerStore> {
-	let data = Data::get().await;
+	let data = Data::get().await.filter(|data| !out_dated(data.update_time.to_utc()));
 
 	let Some(data) = data else {
-		return AnswerStore {
-			inner: vec![get_bilingual_str!(lang, SERVER_ERROR_TIMEDOUT).into()],
-			update_time: DateTime::UNIX_EPOCH.into(),
-		}
-		.into();
+		return AnswerEntry::new_err(timeout_err);
 	};
 
-	if out_dated(data.update_time.to_utc()) {
-		return None;
+	if entry.update_time >= data.update_time {
+		return entry;
 	}
 
-	if last_update >= &data.update_time {
-		return None;
-	}
+	let update_time = data.update_time;
 
 	let mut inner = mix_strings(lang, &[
 		data.general_situation.add_single_newline(),
@@ -74,6 +48,6 @@ pub async fn update(lang: &Lang, last_update: &DateTime<FixedOffset>) -> Option<
 	]);
 
 	write!(inner, "\n\n<i>@ {}</i>", data.update_time).ok();
-
-	AnswerStore::new(vec![inner], data.update_time).into()
+	let inner = vec![inner];
+	AnswerEntry::new(inner, update_time)
 }

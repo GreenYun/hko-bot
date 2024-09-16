@@ -13,6 +13,10 @@ pub struct BilingualStr<'a> {
 }
 
 impl<'a> BilingualStr<'a> {
+	pub const fn new(chinese: &'a str, english: &'a str) -> Self {
+		Self { chinese, english }
+	}
+
 	pub const fn is_empty(&self) -> bool {
 		self.chinese.is_empty() && self.english.is_empty()
 	}

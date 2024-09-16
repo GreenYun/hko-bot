@@ -54,10 +54,10 @@ mod test {
 		use super::{mix_string, mix_strings, BilingualStr, BilingualString};
 		use crate::database::types::lang::Lang;
 
-		let str1 = BilingualStr { chinese: "中文", english: "Chinese" };
-		let str2 = BilingualStr { chinese: "", english: "English" };
-		let str3 = BilingualStr { chinese: "中文", english: "" };
-		let str4 = BilingualStr { chinese: "", english: "" };
+		let str1 = BilingualStr::new("中文", "Chinese");
+		let str2 = BilingualStr::new("", "English");
+		let str3 = BilingualStr::new("中文", "");
+		let str4 = BilingualStr::new("", "");
 
 		assert_eq!(mix_string(&Lang::Bilingual, &str1), "中文\nChinese");
 		assert_eq!(mix_string(&Lang::Bilingual, &str2), "English");

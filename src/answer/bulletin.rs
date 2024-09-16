@@ -1,10 +1,9 @@
 // Copyright (c) 2024 GreenYun Organization
 // SPDX-License-Identifier: MIT
 
-use std::{fmt::Write, sync::OnceLock};
+use std::{fmt::Write, sync::LazyLock};
 
-use chrono::{DateTime, FixedOffset, Timelike as _};
-use tokio::sync::RwLock;
+use chrono::Timelike as _;
 
 use crate::{
 	database::types::lang::Lang,
@@ -17,87 +16,59 @@ use crate::{
 	weather::{Bulletin as Data, WeatherData as _},
 };
 
-use super::{Answer, AnswerStore};
+use super::{Answer, AnswerEntry, AnswerStore};
 
 #[rustfmt::skip]
 macro_rules! ch_num {
-    (1) => ("一");
-    (2) => ("二");
-    (3) => ("三");
-    (4) => ("四");
-    (5) => ("五");
-    (6) => ("六");
-    (7) => ("七");
-    (8) => ("八");
-    (9) => ("九");
+    (1)  => ("一");
+    (2)  => ("二");
+    (3)  => ("三");
+    (4)  => ("四");
+    (5)  => ("五");
+    (6)  => ("六");
+    (7)  => ("七");
+    (8)  => ("八");
+    (9)  => ("九");
     (10) => ("十");
     (11) => ("十一");
     (12) => ("十二");
 }
 
-static ANSWER_BI: OnceLock<RwLock<AnswerStore>> = OnceLock::new();
-static ANSWER_EN: OnceLock<RwLock<AnswerStore>> = OnceLock::new();
-static ANSWER_ZH: OnceLock<RwLock<AnswerStore>> = OnceLock::new();
+static ANSWER: LazyLock<AnswerStore> = LazyLock::new(AnswerStore::default);
 
 pub struct Bulletin;
 
 impl Answer for Bulletin {
 	async fn answer(lang: &Lang) -> Vec<String> {
-		update_and_get(lang).await
+		let entry = ANSWER.update_and_get(lang, update).await;
+		entry.inner
 	}
 }
 
-pub async fn update_and_get(lang: &Lang) -> Vec<String> {
-	let ol = lang.map(&ANSWER_BI, &ANSWER_ZH, &ANSWER_EN);
-	let rl = ol.get_or_init(|| RwLock::new(AnswerStore::default()));
+async fn update(lang: &Lang, entry: AnswerEntry) -> AnswerEntry {
+	let timeout_err = get_bilingual_str!(lang, SERVER_ERROR_TIMEDOUT);
 
-	let old = {
-		let old = rl.read().await;
-		old.clone()
-	};
-
-	update(lang, &old.update_time).await.map_or(old.inner, |new| new.inner)
-}
-
-pub async fn update(lang: &Lang, last_update: &DateTime<FixedOffset>) -> Option<AnswerStore> {
-	let data = Data::get().await;
+	let data = Data::get().await.filter(|data| !out_dated(data.update_time.to_utc()));
 
 	let Some(data) = data else {
-		return AnswerStore {
-			inner: vec![get_bilingual_str!(lang, SERVER_ERROR_TIMEDOUT).into()],
-			update_time: DateTime::UNIX_EPOCH.into(),
-		}
-		.into();
+		return AnswerEntry::new_err(timeout_err);
 	};
 
-	if out_dated(data.update_time.to_utc()) {
-		return None;
-	}
-
-	if last_update >= &data.update_time {
-		return None;
+	if entry.update_time >= data.update_time {
+		return entry;
 	}
 
 	let update_time = data.update_time;
 
 	let inner = to_string(&data, lang);
 	let inner = vec![inner];
-	let store = AnswerStore { inner, update_time };
-	{
-		let ol = lang.map(&ANSWER_BI, &ANSWER_ZH, &ANSWER_EN);
-		let rl = ol.get_or_init(|| RwLock::new(AnswerStore::default()));
-		let mut w = rl.write().await;
-		*w = store.clone();
-	}
-
-	store.into()
+	AnswerEntry::new(inner, update_time)
 }
 
 fn to_string(data: &Data, lang: &Lang) -> String {
 	static SPECIAL_WEATHER_TIPS: BilingualStr =
-		BilingualStr { chinese: "<b>特別天氣提示：</b>", english: "<b>Special Weather Tips:</b>" };
-	static WEATHER_WARNING: BilingualStr =
-		BilingualStr { chinese: "<b>請注意：</b>", english: "<b>Please be reminded that:</b>" };
+		BilingualStr::new("<b>特別天氣提示：</b>", "<b>Special Weather Tips:</b>");
+	static WEATHER_WARNING: BilingualStr = BilingualStr::new("<b>請注意：</b>", "<b>Please be reminded that:</b>");
 
 	let (pm, hour12) = data.update_time.time().hour12();
 	let chi_hour = chinese_hour(pm, hour12);
