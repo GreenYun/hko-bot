@@ -61,11 +61,10 @@ async fn update(lang: &Lang, entry: AnswerEntry) -> AnswerEntry {
 	let update_time = data.update_time;
 
 	let inner = to_string(&data, lang);
-	let inner = vec![inner];
 	AnswerEntry::new(inner, update_time)
 }
 
-fn to_string(data: &Data, lang: &Lang) -> String {
+fn to_string(data: &Data, lang: &Lang) -> Vec<String> {
 	static SPECIAL_WEATHER_TIPS: BilingualStr =
 		BilingualStr::new("<b>特別天氣提示：</b>", "<b>Special Weather Tips:</b>");
 	static WEATHER_WARNING: BilingualStr = BilingualStr::new("<b>請注意：</b>", "<b>Please be reminded that:</b>");
@@ -130,23 +129,32 @@ fn to_string(data: &Data, lang: &Lang) -> String {
 	text.reserve(4096 - text.len());
 
 	if !data.special_tips.is_empty() {
-		write!(text, "\n\n{}\n\n{}", &mix_string(lang, &SPECIAL_WEATHER_TIPS), &mix_strings(lang, &data.special_tips))
-			.ok();
+		let special_tips: Vec<_> =
+			data.special_tips.iter().map(Clone::clone).map(BilingualString::add_single_newline).collect();
+		write!(text, "\n\n{}\n\n{}", &mix_string(lang, &SPECIAL_WEATHER_TIPS), &mix_strings(lang, &special_tips)).ok();
 	}
 
 	if !data.warning.is_empty() {
-		write!(text, "\n\n{}\n\n{}", mix_string(lang, &WEATHER_WARNING), mix_strings(lang, &data.warning)).ok();
+		let warning: Vec<_> = data.warning.iter().map(Clone::clone).map(BilingualString::add_single_newline).collect();
+		write!(text, "\n\n{}\n\n{}", mix_string(lang, &WEATHER_WARNING), mix_strings(lang, &warning)).ok();
 	}
 
 	if !data.tropical_cyclone.is_empty() {
-		write!(text, "\n\n{}", &mix_strings(lang, &data.tropical_cyclone)).ok();
+		let tropical_cyclone: Vec<_> =
+			data.tropical_cyclone.iter().map(Clone::clone).map(BilingualString::add_single_newline).collect();
+		write!(text, "\n\n{}", &mix_strings(lang, &tropical_cyclone)).ok();
 	}
 
-	write!(text, "\n\n<i>@ {}</i>", data.update_time).ok();
-
-	text.shrink_to_fit();
-
-	text
+	if matches!(lang, Lang::Bilingual) && text.len() > 4000 {
+		let mut ch = to_string(data, &Lang::Chinese);
+		let en = to_string(data, &Lang::English);
+		ch.extend_from_slice(&en);
+		ch
+	} else {
+		write!(text, "\n\n<i>@ {}</i>", data.update_time).ok();
+		text.shrink_to_fit();
+		vec![text]
+	}
 }
 
 const fn chinese_hour(pm: bool, hour12: u32) -> &'static str {
