@@ -26,7 +26,7 @@ impl Answer for Warning {
 }
 
 async fn update(lang: &Lang, entry: AnswerEntry) -> AnswerEntry {
-	let timeout_err = get_bilingual_str!(lang, SERVER_ERROR_TIMEDOUT);
+	let timeout_err = get_bilingual_str!(lang, SERVER_ERROR_TIMEOUT);
 
 	let data = Data::get().await;
 

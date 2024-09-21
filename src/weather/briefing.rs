@@ -4,7 +4,7 @@
 use std::sync::OnceLock;
 
 use chrono::{DateTime, FixedOffset};
-use hko::weather::Local;
+use hko::weather::Local as Source;
 use tokio::sync::RwLock;
 
 use crate::tool::types::BilingualString;
@@ -22,43 +22,34 @@ pub struct Briefing {
 	pub update_time: DateTime<FixedOffset>,
 }
 
-static BRIEFING_STORE: OnceLock<RwLock<Briefing>> = OnceLock::new();
+static STORE: OnceLock<RwLock<Briefing>> = OnceLock::new();
 
 impl Briefing {
-	fn new(chinese: Local, english: Local) -> Self {
+	fn new(zh: Source, en: Source) -> Self {
 		Self {
-			general_situation: BilingualString::new(chinese.general_situation, english.general_situation),
-			forecast_period: BilingualString::new(chinese.forecast_period, english.forecast_period),
-			forecast_desc: BilingualString::new(chinese.forecast_desc, english.forecast_desc),
-			outlook: BilingualString::new(chinese.outlook, english.outlook),
-			tc_info: BilingualString::new(chinese.tc_info, english.tc_info),
-			fire_danger_warning: BilingualString::new(chinese.fire_danger_warning, english.fire_danger_warning),
-			update_time: chinese.update_time,
+			general_situation: BilingualString::new(zh.general_situation, en.general_situation),
+			forecast_period: BilingualString::new(zh.forecast_period, en.forecast_period),
+			forecast_desc: BilingualString::new(zh.forecast_desc, en.forecast_desc),
+			outlook: BilingualString::new(zh.outlook, en.outlook),
+			tc_info: BilingualString::new(zh.tc_info, en.tc_info),
+			fire_danger_warning: BilingualString::new(zh.fire_danger_warning, en.fire_danger_warning),
+			update_time: zh.update_time,
 		}
+	}
+}
+
+impl From<(Source, Source)> for Briefing {
+	fn from((zh, en): (Source, Source)) -> Self {
+		Self::new(zh, en)
 	}
 }
 
 impl WeatherData for Briefing {
-	async fn get() -> Option<Self> {
-		if let Some(lock) = BRIEFING_STORE.get() {
-			let lock = lock.read().await;
-			Some(lock.clone())
-		} else {
-			None
-		}
+	fn get_store() -> &'static OnceLock<RwLock<Self>> {
+		&STORE
 	}
 }
 
 impl WeatherDataUpdater for Briefing {
-	type Source = Local;
-
-	async fn update(chinese: Local, english: Local) {
-		let translated = Self::new(chinese, english);
-		if let Some(lock) = BRIEFING_STORE.get() {
-			let mut lock = lock.write().await;
-			*lock = translated;
-		} else {
-			BRIEFING_STORE.set(RwLock::new(translated)).ok();
-		}
-	}
+	type Source = Source;
 }

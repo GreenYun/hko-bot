@@ -5,7 +5,7 @@ use teloxide::{prelude::*, types::ParseMode};
 
 use super::macros::reply_html;
 use crate::{
-	answer::{Answer as _, Briefing},
+	answer::{Answer as _, Briefing as Answer},
 	database::entities::chat::Chat,
 	tool::ext::NonEmptyExt as _,
 };
@@ -13,7 +13,7 @@ use crate::{
 pub(super) async fn briefing(message: Message, bot: Bot, chat: Chat) -> ResponseResult<()> {
 	let chat_id = message.chat.id;
 
-	if let Some(text) = Briefing::answer(&chat.lang).await.get_non_empty() {
+	if let Some(text) = Answer::answer(&chat.lang).await.get_non_empty() {
 		reply_html!(chat_id, message.id, text, bot)?;
 	} else {
 		log::error!("Empty briefing data");

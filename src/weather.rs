@@ -1,36 +1,57 @@
 // Copyright (c) 2022 - 2024 GreenYun Organization
 // SPDX-License-Identifier: MIT
 
-use std::{any::type_name, sync::Arc};
+use std::{
+	any::type_name,
+	sync::{Arc, OnceLock},
+};
 
 use hko::{common::Lang, fetch_with_client};
 use tokio::{
 	signal,
-	sync::Notify,
+	sync::{Notify, RwLock},
 	time::{self, Duration},
 };
 
 use crate::http;
 
-mod macros;
+#[allow(clippy::module_name_repetitions)]
+pub trait WeatherData: 'static + Clone + std::marker::Sized {
+	fn get_store() -> &'static OnceLock<RwLock<Self>>;
 
-macros::weather_mods! {
-	pub mod briefing;
-	pub mod bulletin;
-	pub mod warning;
-	const ALL_UPDATERS: [&Updater; COUNT];
+	async fn get() -> Option<Self> {
+		for _ in 0..3 {
+			let data = if let Some(lock) = Self::get_store().get() {
+				let lock = lock.read().await;
+				Some(lock.clone())
+			} else {
+				None
+			};
+
+			if data.is_some() {
+				return data;
+			}
+
+			time::sleep(Duration::from_secs(1)).await;
+		}
+
+		None
+	}
 }
 
 #[allow(clippy::module_name_repetitions)]
-pub trait WeatherData: std::marker::Sized {
-	async fn get() -> Option<Self>;
-}
-
-#[allow(clippy::module_name_repetitions)]
-trait WeatherDataUpdater {
+trait WeatherDataUpdater: WeatherData + From<(Self::Source, Self::Source)> {
 	type Source;
 
-	async fn update(chinese: Self::Source, english: Self::Source);
+	async fn update(chinese: Self::Source, english: Self::Source) {
+		let translated = Self::from((chinese, english));
+		if let Some(lock) = Self::get_store().get() {
+			let mut lock = lock.write().await;
+			*lock = translated;
+		} else {
+			Self::get_store().set(RwLock::new(translated)).ok();
+		}
+	}
 }
 
 // This allow notation is not good, but we are trying to not to use the
@@ -100,3 +121,13 @@ pub async fn update() {
 	log::info!("weather updater shutdown signal sent");
 	tokio::join!(handle).0.ok();
 }
+
+macros::weather_mods! {
+	pub mod briefing;
+	pub mod bulletin;
+	pub mod forecast;
+	pub mod warning;
+	const ALL_UPDATERS: [&Updater; COUNT];
+}
+
+mod macros;

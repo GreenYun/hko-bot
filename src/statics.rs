@@ -29,7 +29,7 @@ pub(crate) use get_bilingual_str;
 
 // Server error messages
 
-make_bilingual!(SERVER_ERROR_TIMEDOUT, "連線逾時，請稍後再試。", "Connection timed out, please try again later.");
+make_bilingual!(SERVER_ERROR_TIMEOUT, "連線逾時，請稍後再試。", "Connection timed out, please try again later.");
 
 // Start messages
 
@@ -119,3 +119,7 @@ make_bilingual!(BRIEFING_TITLE, "本港地區天氣預報", "Local Weather Forec
 // Bulletin titles
 
 make_bilingual!(BULLETIN_TITLE, "本港地區天氣報告", "Current Weather Report");
+
+// Forecast titles
+
+make_bilingual!(FORECAST_TITLE, "九天天氣預報", "9-day Weather Forecast");

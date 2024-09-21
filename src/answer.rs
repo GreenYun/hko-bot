@@ -10,6 +10,7 @@ use crate::database::types::lang::Lang;
 
 pub use briefing::Briefing;
 pub use bulletin::Bulletin;
+pub use forecast::Forecast;
 pub use warning::Warning;
 
 pub use setlang::to_string as setlang;
@@ -74,5 +75,7 @@ impl AnswerStore {
 
 mod briefing;
 mod bulletin;
+mod forecast;
+mod macros;
 mod setlang;
 mod warning;

@@ -18,7 +18,9 @@ use macros::command_endpoint;
 pub enum Command {
 	Briefing,
 	Bulletin,
-	Current,
+
+	#[command(parse_with = parse_forecast)]
+	Forecast(Option<usize>),
 	Help,
 	Purge,
 
@@ -27,6 +29,19 @@ pub enum Command {
 	Settings,
 	Start,
 	Warning,
+}
+
+#[allow(clippy::needless_pass_by_value, clippy::unnecessary_wraps)]
+fn parse_forecast(input: String) -> Result<(Option<usize>,), ParseError> {
+	if input.is_empty() {
+		return Ok((None,));
+	}
+
+	let input = input.parse::<usize>();
+	match input {
+		Ok(days) if days > 0 && days <= 9 => Ok((Some(days),)),
+		_ => Ok((None,)),
+	}
 }
 
 #[allow(clippy::unnecessary_wraps)]
@@ -53,6 +68,7 @@ pub fn schema() -> UpdateHandler<RequestError> {
 			.branch(command_endpoint!(Command::SetLang(lang)))
 			.branch(command_endpoint!(Command::Briefing))
 			.branch(command_endpoint!(Command::Bulletin))
+			.branch(command_endpoint!(Command::Forecast(days)))
 			.branch(command_endpoint!(Command::Warning)),
 		)
 		.branch(dptree::endpoint(|message: Message, bot: Bot| async move {
@@ -64,6 +80,7 @@ pub fn schema() -> UpdateHandler<RequestError> {
 
 mod briefing;
 mod bulletin;
+mod forecast;
 mod help;
 mod purge;
 mod setlang;

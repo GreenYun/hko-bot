@@ -16,23 +16,7 @@ use crate::{
 	weather::{Bulletin as Data, WeatherData as _},
 };
 
-use super::{Answer, AnswerEntry, AnswerStore};
-
-#[rustfmt::skip]
-macro_rules! ch_num {
-    (1)  => ("一");
-    (2)  => ("二");
-    (3)  => ("三");
-    (4)  => ("四");
-    (5)  => ("五");
-    (6)  => ("六");
-    (7)  => ("七");
-    (8)  => ("八");
-    (9)  => ("九");
-    (10) => ("十");
-    (11) => ("十一");
-    (12) => ("十二");
-}
+use super::{macros::zh_num, Answer, AnswerEntry, AnswerStore};
 
 static ANSWER: LazyLock<AnswerStore> = LazyLock::new(AnswerStore::default);
 
@@ -46,7 +30,7 @@ impl Answer for Bulletin {
 }
 
 async fn update(lang: &Lang, entry: AnswerEntry) -> AnswerEntry {
-	let timeout_err = get_bilingual_str!(lang, SERVER_ERROR_TIMEDOUT);
+	let timeout_err = get_bilingual_str!(lang, SERVER_ERROR_TIMEOUT);
 
 	let data = Data::get().await.filter(|data| !out_dated(data.update_time.to_utc()));
 
@@ -162,7 +146,7 @@ const fn chinese_hour(pm: bool, hour12: u32) -> &'static str {
         {$desc:literal | $pm:literal in [$($hour:tt)+]} => {
             $(
                 if pm == $pm && hour12 == $hour {
-                    return concat!($desc, ch_num!($hour), "時");
+                    return concat!($desc, zh_num!($hour), "時");
                 }
             )+
         };

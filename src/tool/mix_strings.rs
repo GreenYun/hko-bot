@@ -7,20 +7,20 @@ use crate::database::types::lang::Lang;
 
 use super::types::{BilingualStr, BilingualString};
 
-pub fn mix_string(lang: &Lang, str: &BilingualStr) -> String {
-	if str.is_empty() {
+pub fn mix_string(lang: &Lang, s: &BilingualStr) -> String {
+	if s.is_empty() {
 		return String::new();
 	}
 
 	match lang {
-		Lang::Bilingual => match (str.chinese.is_empty(), str.english.is_empty()) {
+		Lang::Bilingual => match (s.zh.is_empty(), s.en.is_empty()) {
 			(true, true) => String::new(),
-			(false, true) => str.chinese.trim().to_string(),
-			(true, false) => str.english.trim().to_string(),
-			_ => format!("{str:x}\n{str:e}").trim().to_string(),
+			(false, true) => s.zh.trim().to_string(),
+			(true, false) => s.en.trim().to_string(),
+			_ => format!("{s:x}\n{s:e}").trim().to_string(),
 		},
-		Lang::Chinese => str.chinese.is_empty().not().then_some(str.chinese.trim().to_string()).unwrap_or_default(),
-		Lang::English => str.english.is_empty().not().then_some(str.english.trim().to_string()).unwrap_or_default(),
+		Lang::Chinese => s.zh.is_empty().not().then_some(s.zh.trim().to_string()).unwrap_or_default(),
+		Lang::English => s.en.is_empty().not().then_some(s.en.trim().to_string()).unwrap_or_default(),
 	}
 }
 

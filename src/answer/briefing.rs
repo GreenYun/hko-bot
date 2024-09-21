@@ -24,7 +24,7 @@ impl Answer for Briefing {
 }
 
 async fn update(lang: &Lang, entry: AnswerEntry) -> AnswerEntry {
-	let timeout_err = get_bilingual_str!(lang, SERVER_ERROR_TIMEDOUT);
+	let timeout_err = get_bilingual_str!(lang, SERVER_ERROR_TIMEOUT);
 
 	let data = Data::get().await.filter(|data| !out_dated(data.update_time.to_utc()));
 

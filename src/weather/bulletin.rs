@@ -4,7 +4,7 @@
 use std::sync::OnceLock;
 
 use chrono::{DateTime, FixedOffset};
-use hko::weather::{Current, Name as WeatherName};
+use hko::weather::{Current as Source, Name as WeatherName};
 use tokio::sync::RwLock;
 
 use crate::tool::types::BilingualString;
@@ -32,13 +32,13 @@ pub struct Bulletin {
 	pub update_time: DateTime<FixedOffset>,
 }
 
-static BULLETIN_STORE: OnceLock<RwLock<Bulletin>> = OnceLock::new();
+static STORE: OnceLock<RwLock<Bulletin>> = OnceLock::new();
 
 impl Bulletin {
-	fn new(chinese: Current, english: Current) -> Self {
+	fn new(zh: Source, en: Source) -> Self {
 		let get_uv_index = || {
-			let chinese = chinese.uv_index.uv_index();
-			let english = english.uv_index.uv_index();
+			let chinese = zh.uv_index.uv_index();
+			let english = en.uv_index.uv_index();
 			if chinese.is_none() || english.is_none() {
 				return None;
 			}
@@ -65,68 +65,58 @@ impl Bulletin {
 		};
 
 		Self {
-			temperature: english
+			temperature: en
 				.temperature
 				.data
 				.into_iter()
 				.find_map(|v| v.place.eq("Hong Kong Observatory").then_some(v.value))
 				.unwrap_or_default(),
-			humidity: english
+			humidity: en
 				.humidity
 				.data
 				.into_iter()
 				.find_map(|v| v.place.eq("Hong Kong Observatory").then_some(v.value))
 				.unwrap_or_default(),
 			uv_index: get_uv_index(),
-			weather_icon: chinese.icon.icon,
-			warning: chinese
+			weather_icon: zh.icon.icon,
+			warning: zh
 				.warning_message
 				.iter()
-				.zip(english.warning_message.iter())
+				.zip(en.warning_message.iter())
 				.map(|(c, e)| BilingualString::new(c, e))
 				.collect(),
-			tropical_cyclone: chinese
+			tropical_cyclone: zh
 				.tcmessage
-				.zip(english.tcmessage)
+				.zip(en.tcmessage)
 				.map(|(c, e)| c.into_iter().zip(e).map(|(c, e)| BilingualString::new(c, e)).collect())
 				.unwrap_or_default(),
 			rainstorm_reminder: {
-				chinese
-					.rainstorm_reminder
-					.and_then(|c| english.rainstorm_reminder.map(|e| BilingualString::new(c, e)))
+				zh.rainstorm_reminder
+					.and_then(|c| en.rainstorm_reminder.map(|e| BilingualString::new(c, e)))
 					.unwrap_or_default()
 			},
-			special_tips: chinese
+			special_tips: zh
 				.special_tips
-				.zip(english.special_tips)
+				.zip(en.special_tips)
 				.map(|(c, e)| c.into_iter().zip(e).map(|(c, e)| BilingualString::new(c, e)).collect())
 				.unwrap_or_default(),
-			update_time: chinese.update_time,
+			update_time: zh.update_time,
 		}
+	}
+}
+
+impl From<(Source, Source)> for Bulletin {
+	fn from((zh, en): (Source, Source)) -> Self {
+		Self::new(zh, en)
 	}
 }
 
 impl WeatherData for Bulletin {
-	async fn get() -> Option<Self> {
-		if let Some(lock) = BULLETIN_STORE.get() {
-			let lock = lock.read().await;
-			Some(lock.clone())
-		} else {
-			None
-		}
+	fn get_store() -> &'static OnceLock<RwLock<Self>> {
+		&STORE
 	}
 }
 
 impl WeatherDataUpdater for Bulletin {
-	type Source = Current;
-
-	async fn update(chinese: Self::Source, english: Self::Source) {
-		let translated = Self::new(chinese, english);
-		if let Some(lock) = BULLETIN_STORE.get() {
-			let mut lock = lock.write().await;
-			*lock = translated;
-		} else {
-			BULLETIN_STORE.set(RwLock::new(translated)).ok();
-		}
-	}
+	type Source = Source;
 }

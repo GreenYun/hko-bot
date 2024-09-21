@@ -4,7 +4,7 @@
 use std::sync::OnceLock;
 
 use chrono::{DateTime, FixedOffset};
-use hko::weather::{warning::info::InfoDetail, Info};
+use hko::weather::{warning::info::InfoDetail, Info as Source};
 use tokio::sync::RwLock;
 
 use crate::tool::types::BilingualString;
@@ -19,20 +19,20 @@ pub struct Piece {
 }
 
 impl Piece {
-	pub fn new(chinese: InfoDetail, english: InfoDetail) -> Self {
-		let mut chinese_name = format!("{:o}", chinese.code);
-		let mut english_name = format!("{:e}", english.code);
+	pub fn new(zh: InfoDetail, en: InfoDetail) -> Self {
+		let mut chinese_name = format!("{:o}", zh.code);
+		let mut english_name = format!("{:e}", en.code);
 
-		if let Some(code) = chinese.subtype {
+		if let Some(code) = zh.subtype {
 			chinese_name.push_str(&format!("\u{ff1a}{code:o}"));
 			english_name.push_str(&format!(": {code:e}"));
 		}
 
 		Self {
 			name: BilingualString::new(chinese_name, english_name),
-			contents: chinese
+			contents: zh
 				.contents
-				.zip(english.contents)
+				.zip(en.contents)
 				.map(|(c, e)| {
 					let mut c = c.into_iter().collect::<Vec<_>>();
 					let mut e = e.into_iter().collect::<Vec<_>>();
@@ -57,7 +57,7 @@ impl Piece {
 					c.into_iter().zip(e).map(|(c, e)| BilingualString::new(c, e)).collect()
 				})
 				.unwrap_or_default(),
-			update_time: chinese.update_time.unwrap_or_default(),
+			update_time: zh.update_time.unwrap_or_default(),
 		}
 	}
 }
@@ -67,41 +67,32 @@ pub struct Warning {
 	pub pieces: Vec<Piece>,
 }
 
-static WARNING_STORE: OnceLock<RwLock<Warning>> = OnceLock::new();
+static STORE: OnceLock<RwLock<Warning>> = OnceLock::new();
 
 impl Warning {
-	fn new(chinese: Info, english: Info) -> Self {
+	fn new(zh: Source, en: Source) -> Self {
 		Self {
-			pieces: chinese
+			pieces: zh
 				.details
-				.zip(english.details)
+				.zip(en.details)
 				.map(|(c, e)| c.into_iter().zip(e).map(|(c, e)| Piece::new(c, e)).collect())
 				.unwrap_or_default(),
 		}
 	}
 }
 
+impl From<(Source, Source)> for Warning {
+	fn from((zh, en): (Source, Source)) -> Self {
+		Self::new(zh, en)
+	}
+}
+
 impl WeatherData for Warning {
-	async fn get() -> Option<Self> {
-		if let Some(lock) = WARNING_STORE.get() {
-			let lock = lock.read().await;
-			Some(lock.clone())
-		} else {
-			None
-		}
+	fn get_store() -> &'static OnceLock<RwLock<Self>> {
+		&STORE
 	}
 }
 
 impl WeatherDataUpdater for Warning {
-	type Source = Info;
-
-	async fn update(chinese: Self::Source, english: Self::Source) {
-		let translated = Self::new(chinese, english);
-		if let Some(lock) = WARNING_STORE.get() {
-			let mut lock = lock.write().await;
-			*lock = translated;
-		} else {
-			WARNING_STORE.set(RwLock::new(translated)).ok();
-		}
-	}
+	type Source = Source;
 }

@@ -8,7 +8,7 @@ use teloxide::{
 
 use super::macros::reply_html;
 use crate::{
-	answer::{Answer, Warning},
+	answer::{Answer as _, Warning as Answer},
 	database::entities::chat::Chat,
 	statics::get_bilingual_str,
 };
@@ -16,7 +16,7 @@ use crate::{
 pub(super) async fn warning(message: Message, bot: Bot, chat: Chat) -> ResponseResult<()> {
 	let chat_id = message.chat.id;
 
-	let pieces = Warning::answer(&chat.lang).await;
+	let pieces = Answer::answer(&chat.lang).await;
 
 	if pieces.is_empty() {
 		bot.send_message(chat_id, get_bilingual_str!(chat.lang, NO_WARNING_MESSAGE))
