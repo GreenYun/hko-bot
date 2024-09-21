@@ -57,6 +57,7 @@ This bot provides weather information from Hong Kong Observatory.
 /purge - 清除所有對話資料 Purge all current chat data
 /briefing - 獲取本港地區天氣預報 Get local weather report
 /bulletin - 獲取當前天氣報吿 Get current weather report
+/forecast - 獲取九天天氣預報 Get 9-day weather forecast
 /warning - 獲取當前由天文台發出的天氣警報資料 Get the warning information from the Observatory";
 pub const HELP_MESSAGE_CHINESE: &str = r"此機械人將提供來自香港天文台的天氣資訊。
 
@@ -65,6 +66,7 @@ pub const HELP_MESSAGE_CHINESE: &str = r"此機械人將提供來自香港天文
 /purge - 清除所有對話資料
 /briefing - 獲取本港地區天氣預報
 /bulletin - 獲取當前天氣報吿
+/forecast - 獲取九天天氣預報
 /warning - 獲取當前由天文台發出的天氣警報資料";
 pub const HELP_MESSAGE_ENGLISH: &str = r"This bot provides weather information from Hong Kong Observatory.
 
@@ -73,6 +75,7 @@ pub const HELP_MESSAGE_ENGLISH: &str = r"This bot provides weather information f
 /purge - Purge all current chat data
 /briefing - Get local weather forecast
 /bulletin - Get current weather report
+/forecast - Get 9-day weather forecast
 /warning - Get the warning information from the Observatory";
 
 // Settings messages
