@@ -22,13 +22,13 @@ impl<'a> BilingualStr<'a> {
 	}
 }
 
-impl<'a> LowerExp for BilingualStr<'a> {
+impl LowerExp for BilingualStr<'_> {
 	fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
 		f.write_str(self.en)
 	}
 }
 
-impl<'a> LowerHex for BilingualStr<'a> {
+impl LowerHex for BilingualStr<'_> {
 	fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
 		f.write_str(self.zh)
 	}
