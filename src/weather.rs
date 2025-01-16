@@ -54,7 +54,7 @@ trait WeatherDataUpdater: WeatherData + From<(Self::Source, Self::Source)> {
 	}
 }
 
-// This allow notation is not good, but we are trying to not to use the
+// This allow notation is not good, but we are trying not to use the
 // incomplete feature "return_type_notation".
 #[allow(clippy::future_not_send)]
 async fn update_data<T>()
