@@ -39,7 +39,7 @@ async fn answer(query: InlineQuery, bot: Bot) -> ResponseResult<()> {
 		results.push(new_result_article("bulletin_zh", BULLETIN_TITLE_CHINESE, s));
 	}
 
-	if let Some(s) = Forecast::answer(&Lang::Chinese).await.get_non_empty() {
+	if let Some(s) = Forecast::answer(&Lang::Chinese).await.join("\n\n").get_non_empty() {
 		results.push(new_result_article("forecast_zh", FORECAST_TITLE_CHINESE, s));
 	}
 
@@ -51,7 +51,7 @@ async fn answer(query: InlineQuery, bot: Bot) -> ResponseResult<()> {
 		results.push(new_result_article("bulletin_en", BULLETIN_TITLE_ENGLISH, s));
 	}
 
-	if let Some(s) = Forecast::answer(&Lang::English).await.get_non_empty() {
+	if let Some(s) = Forecast::answer(&Lang::English).await.join("\n\n").get_non_empty() {
 		results.push(new_result_article("forecast_en", FORECAST_TITLE_ENGLISH, s));
 	}
 
