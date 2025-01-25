@@ -1,7 +1,7 @@
 // Copyright (c) 2022 - 2024 GreenYun Organization
 // SPDX-License-Identifier: MIT
 
-use env_logger::TimestampPrecision;
+use env_logger::{TimestampPrecision, WriteStyle};
 use log::LevelFilter;
 use syslog::Facility;
 
@@ -49,7 +49,7 @@ fn env_logger_init(show_time: bool, level: LevelFilter) {
 
 	builder
 		.format_timestamp(show_time.then_some(TimestampPrecision::Seconds))
-		.write_style(env_logger::fmt::WriteStyle::Auto)
+		.write_style(WriteStyle::Auto)
 		.filter_level(level)
 		.init();
 }

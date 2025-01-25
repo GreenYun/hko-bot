@@ -63,13 +63,10 @@ where
 	T::Source: hko::Fetch + Send,
 	// T::update(): Send,
 {
-	let client = http::client();
-
 	log::debug!("updating {}", type_name::<T>());
 
-	let chinese = fetch_with_client(Lang::TC, client.clone()).await;
-
-	let english = fetch_with_client(Lang::EN, client).await;
+	let chinese = fetch_with_client(Lang::TC, http::client()).await;
+	let english = fetch_with_client(Lang::EN, http::client()).await;
 
 	if let (Ok(chinese), Ok(english)) = (chinese, english) {
 		T::update(chinese, english).await;
