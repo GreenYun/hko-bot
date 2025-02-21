@@ -1,4 +1,4 @@
-// Copyright (c) 2024 GreenYun Organization
+// Copyright (c) 2024 - 2025 GreenYun Organization
 // SPDX-License-identifier: MIT
 
 use teloxide::{dispatching::UpdateHandler, prelude::*, types::InlineQueryResult, RequestError};

@@ -1,10 +1,10 @@
-// Copyright (c) 2022 - 2024 GreenYun Organization
+// Copyright (c) 2022 - 2025 GreenYun Organization
 // SPDX-License-Identifier: MIT
 
-use std::sync::OnceLock;
+use std::{fmt::Write, sync::OnceLock};
 
 use chrono::{DateTime, FixedOffset};
-use hko::weather::{warning::info::InfoDetail, Info as Source};
+use hko::weather::{Info as Source, warning::info::InfoDetail};
 use tokio::sync::RwLock;
 
 use crate::tool::types::BilingualString;
@@ -24,8 +24,8 @@ impl Piece {
 		let mut english_name = format!("{:e}", en.code);
 
 		if let Some(code) = zh.subtype {
-			chinese_name.push_str(&format!("\u{ff1a}{code:o}"));
-			english_name.push_str(&format!(": {code:e}"));
+			write!(chinese_name, "\u{ff1a}{code:o}").unwrap();
+			write!(english_name, ": {code:e}").unwrap();
 		}
 
 		Self {

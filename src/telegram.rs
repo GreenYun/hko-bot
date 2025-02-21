@@ -1,12 +1,12 @@
-// Copyright (c) 2022 - 2024 GreenYun Organization
+// Copyright (c) 2022 - 2025 GreenYun Organization
 // SPDX-License-Identifier: MIT
 
 use std::sync::Arc;
 
 use teloxide::{
+	RequestError,
 	dispatching::{DefaultKey, UpdateHandler},
 	prelude::*,
-	RequestError,
 };
 
 use crate::{database::Connection, http};
@@ -25,7 +25,7 @@ where
 			match bot.get_me().await {
 				Ok(me) => log::info!("Connected to Telegram bot {}", me.full_name()),
 				Err(e) => log::error!("Connection error: {e}"),
-			};
+			}
 		});
 	}
 

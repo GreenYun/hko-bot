@@ -1,11 +1,11 @@
-// Copyright (c) 2022 - 2024 GreenYun Organization
+// Copyright (c) 2022 - 2025 GreenYun Organization
 // SPDX-License-Identifier: MIT
 
 use teloxide::{prelude::*, types::ParseMode};
 
 use super::macros::reply_html;
 use crate::{
-	database::{entities::chat::Chat, types::lang::Lang, Connection},
+	database::{Connection, entities::chat::Chat, types::lang::Lang},
 	statics::{self, get_bilingual_str},
 };
 
@@ -36,7 +36,7 @@ pub(super) async fn start(message: Message, bot: Bot, db_conn: Connection) -> Re
 	if let Err(e) = db_conn.insert_chat(&chat).await {
 		log::error!("{e}");
 		return respond(());
-	};
+	}
 
 	let text = lang.map("", statics::START_MESSAGE_CHINESE, statics::START_MESSAGE_ENGLISH);
 	reply_html!(chat_id, message.id, text, bot)?;

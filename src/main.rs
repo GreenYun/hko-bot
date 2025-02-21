@@ -1,4 +1,4 @@
-// Copyright (c) 2022 - 2024 GreenYun Organization
+// Copyright (c) 2022 - 2025 GreenYun Organization
 // SPDX-License-Identifier: MIT
 
 pub const NAME_VERSION_STRING: &str = concat!(env!("CARGO_PKG_NAME"), " ", env!("CARGO_PKG_VERSION"));

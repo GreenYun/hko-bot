@@ -1,4 +1,4 @@
-// Copyright (c) 2022 - 2024 GreenYun Organization
+// Copyright (c) 2022 - 2025 GreenYun Organization
 // SPDX-License-Identifier: MIT
 
 use std::{env, io, path::Path, process};
@@ -66,11 +66,7 @@ fn program_call_name() -> String {
 	let exe_path = env::args_os().next().unwrap_or_default();
 	let exe_path = Path::new(&exe_path);
 	let exe_name = exe_path.file_name().unwrap_or_default().to_string_lossy().into_owned();
-	if exe_name.is_empty() {
-		env!("CARGO_PKG_NAME").into()
-	} else {
-		exe_name
-	}
+	if exe_name.is_empty() { env!("CARGO_PKG_NAME").into() } else { exe_name }
 }
 
 fn usage(mut w: impl io::Write) {
