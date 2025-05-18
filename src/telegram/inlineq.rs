@@ -1,7 +1,7 @@
 // Copyright (c) 2024 - 2025 GreenYun Organization
 // SPDX-License-identifier: MIT
 
-use teloxide::{dispatching::UpdateHandler, prelude::*, types::InlineQueryResult, RequestError};
+use teloxide::{RequestError, dispatching::UpdateHandler, prelude::*, types::InlineQueryResult};
 
 use crate::{
 	answer::{Answer as _, Briefing, Bulletin, Forecast},

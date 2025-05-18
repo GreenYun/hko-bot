@@ -10,7 +10,7 @@ use teloxide::{
 
 use crate::{
 	answer,
-	database::{types::lang::Lang, Connection},
+	database::{Connection, types::lang::Lang},
 	statics,
 	telegram::misc::{setlang_ikb, setlang_internal, start_first},
 };

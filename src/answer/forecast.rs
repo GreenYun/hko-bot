@@ -10,10 +10,10 @@ use crate::{
 	database::types::lang::Lang,
 	statics::get_bilingual_str,
 	tool::{data::out_dated, mix_strings, types::BilingualString},
-	weather::{forecast::DailyForecast, Forecast as Data, WeatherData as _},
+	weather::{Forecast as Data, WeatherData as _, forecast::DailyForecast},
 };
 
-use super::{macros::zh_num, Answer, AnswerEntry, AnswerStore};
+use super::{Answer, AnswerEntry, AnswerStore, macros::zh_num};
 
 static ANSWER: LazyLock<AnswerStore> = LazyLock::new(AnswerStore::default);
 

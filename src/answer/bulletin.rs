@@ -16,7 +16,7 @@ use crate::{
 	weather::{Bulletin as Data, WeatherData as _},
 };
 
-use super::{macros::zh_num, Answer, AnswerEntry, AnswerStore};
+use super::{Answer, AnswerEntry, AnswerStore, macros::zh_num};
 
 static ANSWER: LazyLock<AnswerStore> = LazyLock::new(AnswerStore::default);
 

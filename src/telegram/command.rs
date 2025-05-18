@@ -2,11 +2,11 @@
 // SPDX-License-identifier: MIT
 
 use teloxide::{
+	RequestError,
 	dispatching::UpdateHandler,
 	prelude::*,
 	types::Me,
 	utils::command::{BotCommands, ParseError},
-	RequestError,
 };
 
 use super::misc::start_first;

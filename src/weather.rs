@@ -6,7 +6,7 @@ use std::{any::type_name, sync::OnceLock};
 use hko::{common::Lang, fetch_with_client};
 use tokio::{
 	sync::RwLock,
-	time::{self, Duration},
+	time::{Duration, sleep},
 };
 
 use crate::http;
@@ -28,7 +28,7 @@ pub trait WeatherData: 'static + Clone + std::marker::Sized {
 				return data;
 			}
 
-			time::sleep(Duration::from_secs(1)).await;
+			sleep(Duration::from_secs(1)).await;
 		}
 
 		None
@@ -80,7 +80,7 @@ pub async fn update() {
 
 	for updater in ALL_UPDATERS.into_iter().cycle() {
 		const SLEEP_TIME: Duration = Duration::from_secs(UPDATE_PERIOD / (COUNT as u64));
-		time::sleep(SLEEP_TIME).await;
+		sleep(SLEEP_TIME).await;
 
 		updater().await.ok();
 	}

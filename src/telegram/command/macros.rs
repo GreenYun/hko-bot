@@ -37,7 +37,10 @@ macro_rules! command_endpoint {
 
 macro_rules! reply_html {
 	($to:expr, $on:expr, $text:expr, $bot:expr) => {
-		$bot.send_message($to, $text).parse_mode(ParseMode::Html).reply_parameters(::teloxide::types::ReplyParameters::new($on)).await
+		$bot.send_message($to, $text)
+			.parse_mode(ParseMode::Html)
+			.reply_parameters(::teloxide::types::ReplyParameters::new($on))
+			.await
 	};
 }
 

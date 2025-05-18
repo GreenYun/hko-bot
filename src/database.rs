@@ -3,8 +3,8 @@
 
 use log::LevelFilter;
 use sqlx::{
-	postgres::{PgConnectOptions, PgPool},
 	ConnectOptions, Error, Row,
+	postgres::{PgConnectOptions, PgPool},
 };
 
 #[derive(Clone)]

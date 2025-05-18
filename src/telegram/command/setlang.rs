@@ -11,7 +11,7 @@ use teloxide::{
 use super::macros::reply_html;
 use crate::{
 	answer,
-	database::{entities::chat::Chat, types::lang::Lang, Connection},
+	database::{Connection, entities::chat::Chat, types::lang::Lang},
 	statics,
 	telegram::misc::{setlang_ikb, setlang_internal},
 };

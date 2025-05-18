@@ -1,7 +1,7 @@
 // Copyright (c) 2022 - 2025 GreenYun Organization
 // SPDX-License-identifier: MIT
 
-use teloxide::{dispatching::UpdateHandler, prelude::*, utils::command::BotCommands, RequestError};
+use teloxide::{RequestError, dispatching::UpdateHandler, prelude::*, utils::command::BotCommands};
 
 use super::command::Command;
 

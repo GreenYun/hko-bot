@@ -1,9 +1,9 @@
 // Copyright (c) 2022 - 2025 GreenYun Organization
 // SPDX-License-identifier: MIT
 
-use sqlx::{postgres::PgQueryResult, Error, FromRow};
+use sqlx::{Error, FromRow, postgres::PgQueryResult};
 
-use crate::database::{types::lang::Lang, Connection};
+use crate::database::{Connection, types::lang::Lang};
 
 // CREATE TABLE chat (id bigint PRIMARY KEY, lang lang NOT NULL);
 #[derive(Clone, FromRow)]

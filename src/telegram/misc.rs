@@ -3,7 +3,7 @@
 
 use teloxide::{prelude::*, types::InlineKeyboardButton};
 
-use crate::database::{entities::chat::Chat, types::lang::Lang, Connection};
+use crate::database::{Connection, entities::chat::Chat, types::lang::Lang};
 
 pub async fn start_first(bot: Bot, chat_id: ChatId) -> ResponseResult<()> {
 	bot.send_message(chat_id, "/start first.").await?;
