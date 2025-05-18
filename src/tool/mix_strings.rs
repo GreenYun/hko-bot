@@ -1,7 +1,7 @@
 // Copyright (c) 2022 - 2025 GreenYun Organization
 // SPDX-License-identifier: MIT
 
-use std::{fmt::Write, ops::Not};
+use std::fmt::Write;
 
 use crate::database::types::lang::Lang;
 
@@ -12,15 +12,20 @@ pub fn mix_string(lang: &Lang, s: &BilingualStr) -> String {
 		return String::new();
 	}
 
+	let lang = if matches!(lang, Lang::Bilingual) {
+		match (s.zh.is_empty(), s.en.is_empty()) {
+			(true, _) => &Lang::English,
+			(false, true) => &Lang::Chinese,
+			(false, false) => &Lang::Bilingual,
+		}
+	} else {
+		lang
+	};
+
 	match lang {
-		Lang::Bilingual => match (s.zh.is_empty(), s.en.is_empty()) {
-			(true, true) => String::new(),
-			(false, true) => s.zh.trim().to_string(),
-			(true, false) => s.en.trim().to_string(),
-			_ => format!("{s:x}\n{s:e}").trim().to_string(),
-		},
-		Lang::Chinese => s.zh.is_empty().not().then_some(s.zh.trim().to_string()).unwrap_or_default(),
-		Lang::English => s.en.is_empty().not().then_some(s.en.trim().to_string()).unwrap_or_default(),
+		Lang::Bilingual => format!("{s:x}\n{s:e}").trim().to_string(),
+		Lang::Chinese => s.zh.trim().to_string(),
+		Lang::English => s.en.trim().to_string(),
 	}
 }
 
@@ -51,7 +56,7 @@ pub fn mix_strings(lang: &Lang, list: &[BilingualString]) -> String {
 mod test {
 	#[test]
 	fn test() {
-		use super::{mix_string, mix_strings, BilingualStr, BilingualString};
+		use super::{BilingualStr, BilingualString, mix_string, mix_strings};
 		use crate::database::types::lang::Lang;
 
 		let str1 = BilingualStr::new("中文", "Chinese");

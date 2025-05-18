@@ -1,15 +1,11 @@
 // Copyright (c) 2022 - 2025 GreenYun Organization
 // SPDX-License-Identifier: MIT
 
-use std::{
-	any::type_name,
-	sync::{Arc, OnceLock},
-};
+use std::{any::type_name, sync::OnceLock};
 
 use hko::{common::Lang, fetch_with_client};
 use tokio::{
-	signal,
-	sync::{Notify, RwLock},
+	sync::RwLock,
 	time::{self, Duration},
 };
 
@@ -78,45 +74,16 @@ where
 pub async fn update() {
 	const UPDATE_PERIOD: u64 = 300;
 
-	let dead_notify = Arc::new(Notify::new());
-
-	let handle = {
-		let dead_notify = dead_notify.clone();
-		tokio::spawn(async move {
-			let notified = dead_notify.notified();
-			tokio::pin!(notified);
-
-			for updater in ALL_UPDATERS {
-				if notified.as_mut().enable() {
-					log::info!("weather updater is shut down");
-					return;
-				}
-
-				updater().await.ok();
-			}
-
-			for updater in ALL_UPDATERS.into_iter().cycle() {
-				const SLEEP_TIME: Duration = Duration::from_secs(UPDATE_PERIOD / (COUNT as u64));
-				let to = time::timeout(SLEEP_TIME, notified.as_mut()).await;
-
-				if to.is_ok() {
-					log::info!("weather updater is shut down");
-					return;
-				}
-
-				updater().await.ok();
-			}
-		})
-	};
-
-	if let Err(e) = signal::ctrl_c().await {
-		log::error!("failed to listen for ctrl-c: {}", e);
+	for updater in ALL_UPDATERS {
+		updater().await.ok();
 	}
 
-	time::sleep(Duration::from_secs(1)).await;
-	dead_notify.notify_waiters();
-	log::info!("weather updater shutdown signal sent");
-	tokio::join!(handle).0.ok();
+	for updater in ALL_UPDATERS.into_iter().cycle() {
+		const SLEEP_TIME: Duration = Duration::from_secs(UPDATE_PERIOD / (COUNT as u64));
+		time::sleep(SLEEP_TIME).await;
+
+		updater().await.ok();
+	}
 }
 
 macros::weather_mods! {

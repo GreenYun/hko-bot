@@ -50,11 +50,11 @@ impl BilingualString {
 		Self { zh: zh.into(), en: en.into() }
 	}
 
-	pub fn as_str(&self) -> BilingualStr {
+	pub const fn as_str(&self) -> BilingualStr {
 		BilingualStr { zh: self.zh.as_str(), en: self.en.as_str() }
 	}
 
-	pub fn is_empty(&self) -> bool {
+	pub const fn is_empty(&self) -> bool {
 		self.zh.is_empty() && self.en.is_empty()
 	}
 
