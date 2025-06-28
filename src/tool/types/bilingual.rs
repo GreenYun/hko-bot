@@ -50,7 +50,7 @@ impl BilingualString {
 		Self { zh: zh.into(), en: en.into() }
 	}
 
-	pub const fn as_str(&self) -> BilingualStr {
+	pub const fn as_str(&'_ self) -> BilingualStr<'_> {
 		BilingualStr { zh: self.zh.as_str(), en: self.en.as_str() }
 	}
 
