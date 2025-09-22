@@ -26,4 +26,5 @@ mod http;
 mod statics;
 mod telegram;
 mod tool;
+mod trigger;
 mod weather;

@@ -9,7 +9,7 @@ use teloxide::{
 	prelude::*,
 };
 
-use crate::{database::Connection, http};
+use crate::{database::Connection, http, trigger};
 
 pub fn connect<S>(token: S, db_conn: Connection) -> Dispatcher<Bot, RequestError, DefaultKey>
 where
@@ -18,6 +18,8 @@ where
 	log::info!("Connecting to Telegram...");
 
 	let bot = Bot::with_client(token, http::client());
+
+	trigger::set_bot(bot.clone());
 
 	{
 		let bot = bot.clone();

@@ -9,7 +9,7 @@ use tokio::{
 	time::{Duration, sleep},
 };
 
-use crate::http;
+use crate::{http, trigger};
 
 #[allow(clippy::module_name_repetitions)]
 pub trait WeatherData: 'static + Clone + std::marker::Sized {
@@ -66,6 +66,7 @@ where
 
 	if let (Ok(chinese), Ok(english)) = (chinese, english) {
 		T::update(chinese, english).await;
+		tokio::spawn(trigger::trigger());
 	} else {
 		log::error!("failed to fetch data for {}", type_name::<T>());
 	}
