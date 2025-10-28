@@ -47,11 +47,14 @@ where
 }
 
 fn schema() -> UpdateHandler<RequestError> {
-	let callback_handler = Update::filter_callback_query().branch(callback::schema());
-	let inline_query_handler = Update::filter_inline_query().branch(inlineq::schema());
-	let message_handler = Update::filter_message().branch(command::schema());
+	use callback::schema as callback;
+	use command::schema as command;
+	use inlineq::schema as inlineq;
 
-	dptree::entry().branch(message_handler).branch(callback_handler).branch(inline_query_handler)
+	dptree::entry()
+		.branch(Update::filter_message().branch(command()))
+		.branch(Update::filter_callback_query().branch(callback()))
+		.branch(Update::filter_inline_query().branch(inlineq()))
 }
 
 mod callback;

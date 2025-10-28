@@ -3,7 +3,6 @@
 
 use std::{
 	collections::HashMap,
-	fmt::Write,
 	sync::{LazyLock, OnceLock},
 };
 
@@ -13,7 +12,7 @@ use tokio::sync::RwLock;
 
 use crate::{
 	database::types::lang::Lang,
-	tool::mix_strings,
+	tool::{mix_strings, types::BilingualString},
 	weather::{WeatherData, warning as weather_warning},
 };
 
@@ -44,26 +43,19 @@ pub async fn trigger() {
 		};
 
 		if need_send {
-			{
-				LAST_UPDATE.write().await.insert(name.clone(), update_time);
-			}
+			LAST_UPDATE.write().await.insert(name.clone(), update_time);
 
-			let chinese = piece_to_string(p, &Lang::Chinese);
-			let english = piece_to_string(p, &Lang::English);
+			let mut list = vec!["<b>".to_string() + p.name.clone() + "</b>"];
+			list.extend_from_slice(&p.contents);
+
+			let time_str = format!("<i>@ {}</i>", p.update_time);
+			list.push(BilingualString::new(time_str.clone(), time_str));
+
+			let chinese = mix_strings(&Lang::Chinese, &list);
+			let english = mix_strings(&Lang::English, &list);
 
 			bot.send_message(CHANNEL_CHAT_ID, chinese).parse_mode(ParseMode::Html).await.ok();
 			bot.send_message(CHANNEL_CHAT_ID, english).parse_mode(ParseMode::Html).await.ok();
 		}
 	}
-}
-
-fn piece_to_string(p: &weather_warning::Piece, lang: &Lang) -> String {
-	let mut list = vec!["<b>".to_string() + p.name.clone() + "</b>"];
-	list.extend_from_slice(&p.contents);
-
-	let mut text = mix_strings(lang, &list);
-
-	write!(text, "\n\n<i>@ {}</i>", p.update_time).ok();
-
-	text
 }
