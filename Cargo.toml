@@ -5,7 +5,7 @@ version = "0.1.0"
 
 [dependencies]
 chrono = "0.4"
-hko = { version = "1.12", features = ["fetch"] }
+hko = { version = "1.13", features = ["fetch"] }
 log = "0.4"
 paste = "1"
 rustls = "0.23"
@@ -20,8 +20,8 @@ features = ["auto-color", "humantime"]
 
 [dependencies.reqwest]
 default-features = false
-features = ["rustls-tls-manual-roots-no-provider", "charset", "http2"]
-version = "0.12"
+features = ["charset", "http2"]
+version = "0.13"
 
 [dependencies.sqlx]
 default-features = false
@@ -37,7 +37,7 @@ version = "0.8"
 [dependencies.teloxide]
 default-features = false
 features = ["ctrlc_handler", "macros"]
-version = "0.17"
+path = "../teloxide/crates/teloxide"
 
 [dependencies.tokio]
 features = ["macros", "rt-multi-thread", "signal"]
