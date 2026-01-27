@@ -1,4 +1,4 @@
-// Copyright (c) 2022 - 2025 GreenYun Organization
+// Copyright (c) 2022 - 2026 GreenYun Organization
 // SPDX-License-Identifier: MIT
 
 use env_logger::{TimestampPrecision, WriteStyle};
@@ -7,16 +7,6 @@ use syslog::Facility;
 
 fn get_lowercase_env_var(key: &str) -> Option<String> {
 	std::env::var_os(key).map(|s| s.to_string_lossy().to_ascii_lowercase())
-}
-
-pub fn crypto_init() {
-	match rustls::crypto::aws_lc_rs::default_provider().install_default() {
-		Ok(()) => {}
-		Err(e) => {
-			log::error!("CrytoProvider Error: {e:?}");
-			panic!("CrytoProvider Error: {e:?}");
-		}
-	}
 }
 
 pub fn logger_init() {

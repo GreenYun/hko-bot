@@ -1,4 +1,4 @@
-// Copyright (c) 2022 - 2025 GreenYun Organization
+// Copyright (c) 2022 - 2026 GreenYun Organization
 // SPDX-License-Identifier: MIT
 
 pub const NAME_VERSION_STRING: &str = concat!(env!("CARGO_PKG_NAME"), " ", env!("CARGO_PKG_VERSION"));
@@ -9,8 +9,6 @@ async fn main() {
 
 	config::logger_init();
 	log::info!("{NAME_VERSION_STRING}");
-
-	config::crypto_init();
 
 	let db = database::connect(args.db_uri).await;
 	let mut tg = telegram::connect(args.bot, db);

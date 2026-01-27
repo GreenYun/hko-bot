@@ -1,10 +1,11 @@
-// Copyright (c) 2022 - 2025 GreenYun Organization
+// Copyright (c) 2022 - 2026 GreenYun Organization
 // SPDX-License-Identifier: MIT
 
 use std::{any::type_name, sync::OnceLock};
 
 use hko::{common::Lang, fetch_with_client};
 use tokio::{
+	signal::ctrl_c,
 	sync::RwLock,
 	time::{Duration, sleep},
 };
@@ -81,10 +82,22 @@ pub async fn update() {
 
 	for updater in ALL_UPDATERS.into_iter().cycle() {
 		const SLEEP_TIME: Duration = Duration::from_secs(UPDATE_PERIOD / (COUNT as u64));
-		sleep(SLEEP_TIME).await;
+
+		tokio::select! {
+			_ = ctrl_c() => {
+				log::info!("^C received, weather updater will be shut down");
+				break;
+			}
+
+			() = sleep(SLEEP_TIME) => {
+				// continue to updater
+			}
+		}
 
 		updater().await.ok();
 	}
+
+	log::info!("weather updater has been shut down");
 }
 
 macros::weather_mods! {

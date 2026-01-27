@@ -8,7 +8,6 @@ chrono = "0.4"
 hko = { version = "1.13", features = ["fetch"] }
 log = "0.4"
 paste = "1"
-rustls = "0.23"
 strum = { version = ">=0.24", features = ["derive"] }
 syslog = "7"
 webpki-roots = "1"
@@ -20,7 +19,7 @@ features = ["auto-color", "humantime"]
 
 [dependencies.reqwest]
 default-features = false
-features = ["charset", "http2"]
+features = ["charset", "http2", "rustls"]
 version = "0.13"
 
 [dependencies.sqlx]

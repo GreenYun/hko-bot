@@ -14,7 +14,7 @@ pub fn client() -> Client {
 fn init_client() -> Client {
 	static USER_AGENT: &str = concat!("curl/8 ", env!("CARGO_PKG_NAME"), "/", env!("CARGO_PKG_VERSION"),);
 
-	let client = Client::builder().user_agent(USER_AGENT).build();
+	let client = Client::builder().tls_backend_rustls().user_agent(USER_AGENT).build();
 	match client {
 		Ok(client) => client,
 		Err(e) => {
