@@ -83,8 +83,15 @@ pub async fn update() {
 	for updater in ALL_UPDATERS.into_iter().cycle() {
 		const SLEEP_TIME: Duration = Duration::from_secs(UPDATE_PERIOD / (COUNT as u64));
 
+		let ctrl_c = ctrl_c();
+
 		tokio::select! {
-			_ = ctrl_c() => {
+			r = ctrl_c => {
+				if let Err(e) = r {
+					log::error!("failed to listen for ^C signal: {e}");
+					continue;
+				}
+
 				log::info!("^C received, weather updater will be shut down");
 				break;
 			}
