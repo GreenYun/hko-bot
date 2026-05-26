@@ -31,12 +31,13 @@ features = [
     "runtime-tokio",
     "tls-rustls-aws-lc-rs",
 ]
-version = "0.8"
+version = "0.9"
 
 [dependencies.teloxide]
 default-features = false
 features = ["ctrlc_handler", "macros"]
-path = "../teloxide/crates/teloxide"
+git = "https://github.com/teloxide/teloxide.git"
+rev = "0ca6f7d22410fc043bc52c165f2e69741fd83f1c"
 
 [dependencies.tokio]
 features = ["macros", "rt-multi-thread", "signal"]

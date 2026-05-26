@@ -115,7 +115,7 @@ fn to_string(data: &Data, lang: &Lang) -> Vec<String> {
 	if !data.special_tips.is_empty() {
 		let special_tips: Vec<_> =
 			data.special_tips.iter().map(Clone::clone).map(BilingualString::add_single_newline).collect();
-		write!(text, "\n\n{}\n\n{}", &mix_string(lang, &SPECIAL_WEATHER_TIPS), &mix_strings(lang, &special_tips)).ok();
+		write!(text, "\n\n{}\n\n{}", mix_string(lang, &SPECIAL_WEATHER_TIPS), mix_strings(lang, &special_tips)).ok();
 	}
 
 	if !data.warning.is_empty() {
@@ -126,7 +126,7 @@ fn to_string(data: &Data, lang: &Lang) -> Vec<String> {
 	if !data.tropical_cyclone.is_empty() {
 		let tropical_cyclone: Vec<_> =
 			data.tropical_cyclone.iter().map(Clone::clone).map(BilingualString::add_single_newline).collect();
-		write!(text, "\n\n{}", &mix_strings(lang, &tropical_cyclone)).ok();
+		write!(text, "\n\n{}", mix_strings(lang, &tropical_cyclone)).ok();
 	}
 
 	if matches!(lang, Lang::Bilingual) && text.len() > 4000 {
