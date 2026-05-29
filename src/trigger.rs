@@ -45,8 +45,14 @@ pub async fn trigger() {
 		if need_send {
 			LAST_UPDATE.write().await.insert(name.clone(), update_time);
 
-			let mut list = vec!["<b>".to_string() + p.name.clone() + "</b>"];
+			let mut list = Vec::with_capacity(p.contents.len() + 4);
+			list.push("<b>".to_string() + p.name.clone() + "</b>");
 			list.extend_from_slice(&p.contents);
+
+			if list.len() > 4 {
+				list.insert(2, "<blockquote expandable>".into());
+				list.push("</blockquote>".into());
+			}
 
 			let time_str = format!("<i>@ {}</i>", p.update_time);
 			list.push(BilingualString::new(time_str.clone(), time_str));
