@@ -107,3 +107,15 @@ impl LowerHex for BilingualString {
 		f.write_str(&self.zh)
 	}
 }
+
+impl From<&str> for BilingualString {
+	fn from(value: &str) -> Self {
+		Self { zh: value.to_string(), en: value.to_string() }
+	}
+}
+
+impl From<String> for BilingualString {
+	fn from(value: String) -> Self {
+		Self { zh: value.clone(), en: value }
+	}
+}
