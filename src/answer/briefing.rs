@@ -42,9 +42,9 @@ async fn update(lang: &Lang, entry: AnswerEntry) -> AnswerEntry {
 		data.general_situation.add_single_newline(),
 		data.tc_info.add_single_newline(),
 		data.fire_danger_warning.add_single_newline(),
-		("<b>".to_string() + data.forecast_period + "</b>"),
+		("<b>".to_string() + &data.forecast_period + "</b>"),
 		data.forecast_desc.add_single_newline(),
-		(BilingualString::new("展望：", "Outlook: ") + data.outlook).add_single_newline(),
+		(BilingualString::new("展望：", "Outlook: ") + &data.outlook).add_single_newline(),
 	]);
 
 	write!(inner, "\n\n<i>@ {}</i>", data.update_time).ok();

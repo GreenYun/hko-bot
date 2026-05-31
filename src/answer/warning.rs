@@ -57,12 +57,17 @@ fn to_strings(data: Data, lang: &Lang) -> Vec<String> {
 
 	for p in data.pieces {
 		let mut list = Vec::with_capacity(p.contents.len() + 4);
-		list.push("<b>".to_string() + p.name + "</b>");
+		list.push("<b>".to_string() + &p.name + "</b>");
 		list.extend_from_slice(&p.contents);
 
 		if list.len() > 4 {
-			list.insert(2, "<blockquote expandable>".into());
-			list.push("</blockquote>".into());
+			if let Some(s) = list.get_mut(2) {
+				*s = "<blockquote expandable>".to_string() + &*s;
+			}
+
+			if let Some(s) = list.last_mut() {
+				*s += "</blockquote>";
+			}
 		}
 
 		let mut text = mix_strings(lang, &list);

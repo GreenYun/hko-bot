@@ -46,12 +46,17 @@ pub async fn trigger() {
 			LAST_UPDATE.write().await.insert(name.clone(), update_time);
 
 			let mut list = Vec::with_capacity(p.contents.len() + 4);
-			list.push("<b>".to_string() + p.name.clone() + "</b>");
+			list.push("<b>".to_string() + &p.name + "</b>");
 			list.extend_from_slice(&p.contents);
 
 			if list.len() > 4 {
-				list.insert(2, "<blockquote expandable>".into());
-				list.push("</blockquote>".into());
+				if let Some(s) = list.get_mut(2) {
+					*s = "<blockquote expandable>".to_string() + &*s;
+				}
+
+				if let Some(s) = list.last_mut() {
+					*s += "</blockquote>";
+				}
 			}
 
 			let time_str = format!("<i>@ {}</i>", p.update_time);

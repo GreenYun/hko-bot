@@ -21,15 +21,16 @@ where
 
 	trigger::set_bot(bot.clone());
 
-	{
+	tokio::spawn({
 		let bot = bot.clone();
-		tokio::spawn(async move {
+
+		async move {
 			match bot.get_me().await {
 				Ok(me) => log::info!("Connected to Telegram bot {}", me.full_name()),
 				Err(e) => log::error!("Connection error: {e}"),
 			}
-		});
-	}
+		}
+	});
 
 	let mut dependencies = DependencyMap::new();
 	dependencies.insert(db_conn);

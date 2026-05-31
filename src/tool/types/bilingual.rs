@@ -3,7 +3,7 @@
 
 use std::{
 	fmt::{LowerExp, LowerHex},
-	ops::Add,
+	ops::{Add, AddAssign},
 };
 
 #[allow(clippy::module_name_repetitions)]
@@ -72,10 +72,10 @@ impl BilingualString {
 	}
 }
 
-impl Add for BilingualString {
+impl Add<&Self> for BilingualString {
 	type Output = Self;
 
-	fn add(self, other: Self) -> Self {
+	fn add(self, other: &Self) -> Self {
 		Self { zh: self.zh + other.zh.as_str(), en: self.en + other.en.as_str() }
 	}
 }
@@ -88,11 +88,25 @@ impl Add<&str> for BilingualString {
 	}
 }
 
-impl Add<BilingualString> for String {
+impl Add<&BilingualString> for String {
 	type Output = BilingualString;
 
-	fn add(self, other: BilingualString) -> BilingualString {
+	fn add(self, other: &BilingualString) -> BilingualString {
 		BilingualString { zh: self.clone() + other.zh.as_str(), en: self + other.en.as_str() }
+	}
+}
+
+impl AddAssign<&Self> for BilingualString {
+	fn add_assign(&mut self, other: &Self) {
+		self.zh.push_str(other.zh.as_str());
+		self.en.push_str(other.en.as_str());
+	}
+}
+
+impl AddAssign<&str> for BilingualString {
+	fn add_assign(&mut self, other: &str) {
+		self.zh.push_str(other);
+		self.en.push_str(other);
 	}
 }
 

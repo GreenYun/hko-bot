@@ -10,8 +10,15 @@ use teloxide::{
 };
 
 use super::misc::start_first;
-use crate::database::Connection;
+use crate::database::{Connection, entities::chat::Chat};
 use macros::command_endpoint;
+
+#[derive(Clone)]
+enum DatabaseChat {
+	Chat(Chat),
+	None,
+	Error,
+}
 
 #[derive(BotCommands, Clone)]
 #[command(rename_rule = "lowercase")]
@@ -56,25 +63,38 @@ pub fn schema() -> UpdateHandler<RequestError> {
 			let bot_name = me.user.username.unwrap_or_default();
 			message.text().and_then(|text| Command::parse(text, &bot_name).ok())
 		})
-		.branch(command_endpoint!(Command::Start))
+		.branch(command_endpoint![Command::Start])
 		.branch(
-			dptree::filter_map_async(|message: Message, db_conn: Connection| async move {
+			dptree::map_async(|message: Message, db_conn: Connection| async move {
 				let chat_id = message.chat.id;
-				db_conn.select_chat(chat_id.0).await.ok().flatten()
+				let result = db_conn.select_chat(chat_id.0).await;
+				match result {
+					Ok(Some(chat)) => DatabaseChat::Chat(chat),
+					Ok(None) => DatabaseChat::None,
+					Err(_) => DatabaseChat::Error,
+				}
 			})
-			.branch(command_endpoint!(Command::Help))
-			.branch(command_endpoint!(Command::Settings))
-			.branch(command_endpoint!(Command::Purge))
-			.branch(command_endpoint!(Command::SetLang(lang)))
-			.branch(command_endpoint!(Command::Briefing))
-			.branch(command_endpoint!(Command::Bulletin))
-			.branch(command_endpoint!(Command::Forecast(days)))
-			.branch(command_endpoint!(Command::Warning)),
-		)
-		.branch(dptree::endpoint(|message: Message, bot: Bot| async move {
-			let chat_id = message.chat.id;
-			start_first(bot, chat_id).await
-		})),
+			.branch(
+				dptree::case![DatabaseChat::Chat(chat)]
+					.branch(command_endpoint![Command::Help])
+					.branch(command_endpoint![Command::Settings])
+					.branch(command_endpoint![Command::Purge])
+					.branch(command_endpoint![Command::SetLang(lang)])
+					.branch(command_endpoint![Command::Briefing])
+					.branch(command_endpoint![Command::Bulletin])
+					.branch(command_endpoint![Command::Forecast(days)])
+					.branch(command_endpoint![Command::Warning]),
+			)
+			.branch(dptree::case![DatabaseChat::None].endpoint(|message: Message, bot: Bot| async move {
+				let chat_id = message.chat.id;
+				start_first(bot, chat_id).await
+			}))
+			.branch(dptree::case![DatabaseChat::Error].endpoint(|message: Message, bot: Bot| async move {
+				let chat_id = message.chat.id;
+				bot.send_message(chat_id, "500 Internal Server Error").await?;
+				respond(())
+			})),
+		),
 	)
 }
 
