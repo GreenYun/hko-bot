@@ -31,13 +31,14 @@ features = [
     "runtime-tokio",
     "tls-rustls-aws-lc-rs",
 ]
-version = "0.9"
+git = "https://github.com/transact-rs/sqlx.git"
+rev = "4893f831684c26a4a6dbeae01e7fb9a7120a4d5c"
 
 [dependencies.teloxide]
 default-features = false
 features = ["ctrlc_handler", "macros"]
 git = "https://github.com/teloxide/teloxide.git"
-rev = "0ca6f7d22410fc043bc52c165f2e69741fd83f1c"
+rev = "3c46b96e0dc0cabc75d6430c4566d7e2e12fd233"
 
 [dependencies.tokio]
 features = ["macros", "rt-multi-thread", "signal"]

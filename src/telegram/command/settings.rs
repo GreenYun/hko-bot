@@ -1,4 +1,4 @@
-// Copyright (c) 2022 - 2025 GreenYun Organization
+// Copyright (c) 2022 - 2026 GreenYun Organization
 // SPDX-License-Identifier: MIT
 
 use teloxide::{
@@ -14,31 +14,26 @@ use crate::{
 pub(super) async fn settings(message: Message, bot: Bot, chat: Chat) -> ResponseResult<()> {
 	let chat_id = message.chat.id;
 
-	let msg1;
-	let settings_lang1;
-	let settings_lang;
-	let msg2;
-
-	match chat.lang {
-		Lang::Bilingual => {
-			msg1 = statics::SETTINGS_MESSAGE_1_BILINGUAL;
-			settings_lang1 = statics::SETTINGS_MESSAGE_LANGUAGE_BILINGUAL;
-			settings_lang = "<b>語言 Language</b>\n雙語 Bilingual";
-			msg2 = statics::SETTINGS_MESSAGE_2_BILINGUAL;
-		}
-		Lang::Chinese => {
-			msg1 = statics::SETTINGS_MESSAGE_1_CHINESE;
-			settings_lang1 = statics::SETTINGS_MESSAGE_LANGUAGE_CHINESE;
-			settings_lang = "<b>語言</b>\n中文";
-			msg2 = statics::SETTINGS_MESSAGE_2_CHINESE;
-		}
-		Lang::English => {
-			msg1 = statics::SETTINGS_MESSAGE_1_ENGLISH;
-			settings_lang1 = statics::SETTINGS_MESSAGE_LANGUAGE_ENGLISH;
-			settings_lang = "<b>Language</b>\nEnglish";
-			msg2 = statics::SETTINGS_MESSAGE_2_ENGLISH;
-		}
-	}
+	let (msg1, settings_lang1, settings_lang, msg2) = match chat.lang {
+		Lang::Bilingual => (
+			statics::SETTINGS_MESSAGE_1_BILINGUAL,
+			statics::SETTINGS_MESSAGE_LANGUAGE_BILINGUAL,
+			"<b>語言 Language</b>\n雙語 Bilingual",
+			statics::SETTINGS_MESSAGE_2_BILINGUAL,
+		),
+		Lang::Chinese => (
+			statics::SETTINGS_MESSAGE_1_CHINESE,
+			statics::SETTINGS_MESSAGE_LANGUAGE_CHINESE,
+			"<b>語言</b>\n中文",
+			statics::SETTINGS_MESSAGE_2_CHINESE,
+		),
+		Lang::English => (
+			statics::SETTINGS_MESSAGE_1_ENGLISH,
+			statics::SETTINGS_MESSAGE_LANGUAGE_ENGLISH,
+			"<b>Language</b>\nEnglish",
+			statics::SETTINGS_MESSAGE_2_ENGLISH,
+		),
+	};
 
 	bot.send_message(chat_id, msg1.to_string() + "\n\n" + settings_lang + "\n\n" + msg2)
 		.parse_mode(ParseMode::Html)
