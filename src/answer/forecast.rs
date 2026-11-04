@@ -1,4 +1,4 @@
-// Copyright (c) 2024 - 2025 GreenYun Organization
+// Copyright (c) 2024 - 2026 GreenYun Organization
 // SPDX-License-Identifier: MIT
 
 use std::{fmt::Write, sync::LazyLock};
@@ -10,7 +10,10 @@ use crate::{
 	database::types::lang::Lang,
 	statics::get_bilingual_str,
 	tool::{data::out_dated, mix_strings, types::BilingualString},
-	weather::{Forecast as Data, WeatherData as _, forecast::DailyForecast},
+	weather::{
+		WeatherData as _,
+		forecast::{DailyForecast, Forecast as Data},
+	},
 };
 
 use super::{Answer, AnswerEntry, AnswerStore, macros::zh_num};

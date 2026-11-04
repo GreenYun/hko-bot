@@ -1,14 +1,14 @@
 // Copyright (c) 2024 - 2026 GreenYun Organization
 // SPDX-License-Identifier: MIT
 
-use std::sync::OnceLock;
+use std::sync::LazyLock;
 
 use reqwest::Client;
 
-static HTTP_CLIENT: OnceLock<Client> = OnceLock::new();
+static HTTP_CLIENT: LazyLock<Client> = LazyLock::new(init_client);
 
 pub fn client() -> Client {
-	HTTP_CLIENT.get_or_init(init_client).clone()
+	HTTP_CLIENT.clone()
 }
 
 fn init_client() -> Client {

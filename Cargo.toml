@@ -32,7 +32,7 @@ features = [
     "tls-rustls-aws-lc-rs",
 ]
 git = "https://github.com/transact-rs/sqlx.git"
-rev = "4893f831684c26a4a6dbeae01e7fb9a7120a4d5c"
+rev = "7908fe79fabc816ce172ac1ac59f6b4bd548ca39"
 
 [dependencies.teloxide]
 default-features = false

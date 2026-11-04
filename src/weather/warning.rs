@@ -1,4 +1,4 @@
-// Copyright (c) 2022 - 2025 GreenYun Organization
+// Copyright (c) 2022 - 2026 GreenYun Organization
 // SPDX-License-Identifier: MIT
 
 use std::{fmt::Write, sync::OnceLock};
@@ -9,7 +9,7 @@ use tokio::sync::RwLock;
 
 use crate::tool::types::BilingualString;
 
-use super::{WeatherData, WeatherDataUpdater};
+use super::WeatherData;
 
 #[derive(Clone, Default)]
 pub struct Piece {
@@ -88,11 +88,9 @@ impl From<(Source, Source)> for Warning {
 }
 
 impl WeatherData for Warning {
+	type Source = Source;
+
 	fn get_store() -> &'static OnceLock<RwLock<Self>> {
 		&STORE
 	}
-}
-
-impl WeatherDataUpdater for Warning {
-	type Source = Source;
 }

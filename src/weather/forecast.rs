@@ -1,15 +1,15 @@
-// Copyright (c) 2024 - 2025 GreenYun Organization
+// Copyright (c) 2024 - 2026 GreenYun Organization
 // SPDX-License-Identifier: MIT
 
 use std::sync::OnceLock;
 
 use chrono::{DateTime, FixedOffset, NaiveDate};
-use hko::weather::{nine_day::WeatherForcast, NineDay as Source};
+use hko::weather::{NineDay as Source, nine_day::WeatherForcast};
 use tokio::sync::RwLock;
 
 use crate::tool::types::BilingualString;
 
-use super::{WeatherData, WeatherDataUpdater};
+use super::WeatherData;
 
 #[allow(clippy::module_name_repetitions)]
 #[derive(Clone, Default)]
@@ -70,11 +70,9 @@ impl From<(Source, Source)> for Forecast {
 }
 
 impl WeatherData for Forecast {
+	type Source = Source;
+
 	fn get_store() -> &'static OnceLock<RwLock<Self>> {
 		&STORE
 	}
-}
-
-impl WeatherDataUpdater for Forecast {
-	type Source = Source;
 }

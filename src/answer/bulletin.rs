@@ -1,4 +1,4 @@
-// Copyright (c) 2024 - 2025 GreenYun Organization
+// Copyright (c) 2024 - 2026 GreenYun Organization
 // SPDX-License-Identifier: MIT
 
 use std::{fmt::Write, sync::LazyLock};
@@ -13,7 +13,7 @@ use crate::{
 		mix_string, mix_strings,
 		types::{BilingualStr, BilingualString},
 	},
-	weather::{Bulletin as Data, WeatherData as _},
+	weather::{WeatherData as _, bulletin::Bulletin as Data},
 };
 
 use super::{Answer, AnswerEntry, AnswerStore, macros::zh_num};

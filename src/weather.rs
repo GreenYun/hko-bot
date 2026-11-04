@@ -12,87 +12,91 @@ use tokio::{
 
 use crate::{http, trigger};
 
+type Updater = fn() -> tokio::task::JoinHandle<()>;
+
+const ALL_UPDATERS: &[Updater] = &[
+	launch_update::<briefing::Briefing>,
+	launch_update::<bulletin::Bulletin>,
+	launch_update::<forecast::Forecast>,
+	launch_update::<warning::Warning>,
+];
+
 #[allow(clippy::module_name_repetitions)]
-pub trait WeatherData: 'static + Clone + std::marker::Sized {
+pub trait WeatherData: 'static + Clone + From<(Self::Source, Self::Source)> {
+	type Source;
+
 	fn get_store() -> &'static OnceLock<RwLock<Self>>;
 
 	async fn get() -> Option<Self> {
-		for _ in 0..3 {
-			let data = if let Some(lock) = Self::get_store().get() {
-				let lock = lock.read().await;
-				Some(lock.clone())
-			} else {
-				None
-			};
+		const MAX_ATTEMPTS: usize = 3;
+		const RETRY_DELAY: Duration = Duration::from_secs(1);
 
-			if data.is_some() {
-				return data;
+		for attempt in 0..MAX_ATTEMPTS {
+			if let Some(lock) = Self::get_store().get() {
+				return Some(lock.read().await.clone());
 			}
 
-			sleep(Duration::from_secs(1)).await;
+			if attempt + 1 < MAX_ATTEMPTS {
+				sleep(RETRY_DELAY).await;
+			}
 		}
 
 		None
 	}
 }
 
-#[allow(clippy::module_name_repetitions)]
-trait WeatherDataUpdater: WeatherData + From<(Self::Source, Self::Source)> {
-	type Source;
-
-	async fn update(chinese: Self::Source, english: Self::Source) {
-		let translated = Self::from((chinese, english));
-		if let Some(lock) = Self::get_store().get() {
-			let mut lock = lock.write().await;
-			*lock = translated;
-		} else {
-			Self::get_store().set(RwLock::new(translated)).ok();
-		}
-	}
-}
-
-// This allow notation is not good, but we are trying not to use the
-// incomplete feature "return_type_notation".
-#[allow(clippy::future_not_send)]
 async fn update_data<T>()
 where
-	T: WeatherDataUpdater + Send + Sync,
+	T: WeatherData + Send + Sync,
 	T::Source: hko::Fetch + Send,
-	// T::update(): Send,
 {
 	log::debug!("updating {}", type_name::<T>());
 
-	let chinese = fetch_with_client(Lang::TC, http::client()).await;
-	let english = fetch_with_client(Lang::EN, http::client()).await;
+	let client = http::client();
+	let (chinese, english) =
+		tokio::join!(fetch_with_client(Lang::TC, client.clone()), fetch_with_client(Lang::EN, client),);
 
 	if let (Ok(chinese), Ok(english)) = (chinese, english) {
-		T::update(chinese, english).await;
+		let translated = T::from((chinese, english));
+		if let Some(lock) = T::get_store().get() {
+			let mut lock = lock.write().await;
+			*lock = translated;
+		} else {
+			T::get_store().set(RwLock::new(translated)).ok();
+		}
 		tokio::spawn(trigger::trigger());
 	} else {
 		log::error!("failed to fetch data for {}", type_name::<T>());
 	}
 }
 
+fn launch_update<T>() -> tokio::task::JoinHandle<()>
+where
+	T: WeatherData + Send + Sync,
+	T::Source: hko::Fetch + Send,
+{
+	tokio::spawn(update_data::<T>())
+}
+
 pub async fn update() {
 	const UPDATE_PERIOD: u64 = 300;
+
+	let ctrl_c = ctrl_c();
+	tokio::pin!(ctrl_c);
 
 	for updater in ALL_UPDATERS {
 		updater().await.ok();
 	}
 
-	for updater in ALL_UPDATERS.into_iter().cycle() {
-		const SLEEP_TIME: Duration = Duration::from_secs(UPDATE_PERIOD / (COUNT as u64));
-
-		let ctrl_c = ctrl_c();
+	for updater in ALL_UPDATERS.iter().cycle() {
+		const SLEEP_TIME: Duration = Duration::from_secs(UPDATE_PERIOD / ALL_UPDATERS.len() as u64);
 
 		tokio::select! {
-			r = ctrl_c => {
-				if let Err(e) = r {
-					log::error!("failed to listen for ^C signal: {e}");
-					continue;
+			r = &mut ctrl_c => {
+				match r {
+					Ok(()) => log::info!("^C received, weather updater will be shut down"),
+					Err(e) => log::error!("failed to listen for ^C signal: {e}"),
 				}
-
-				log::info!("^C received, weather updater will be shut down");
 				break;
 			}
 
@@ -107,12 +111,7 @@ pub async fn update() {
 	log::info!("weather updater has been shut down");
 }
 
-macros::weather_mods! {
-	pub mod briefing;
-	pub mod bulletin;
-	pub mod forecast;
-	pub mod warning;
-	const ALL_UPDATERS: [&Updater; COUNT];
-}
-
-mod macros;
+pub mod briefing;
+pub mod bulletin;
+pub mod forecast;
+pub mod warning;
