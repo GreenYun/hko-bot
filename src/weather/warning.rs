@@ -30,33 +30,29 @@ impl Piece {
 
 		Self {
 			name: BilingualString::new(chinese_name, english_name),
-			contents: zh
-				.contents
-				.zip(en.contents)
-				.map(|(c, e)| {
-					let mut c = c.into_iter().collect::<Vec<_>>();
-					let mut e = e.into_iter().collect::<Vec<_>>();
+			contents: zh.contents.zip(en.contents).map_or_default(|(c, e)| {
+				let mut c = c.into_iter().collect::<Vec<_>>();
+				let mut e = e.into_iter().collect::<Vec<_>>();
 
-					let c_len = c.len();
-					let e_len = e.len();
+				let c_len = c.len();
+				let e_len = e.len();
 
-					match c_len.cmp(&e_len) {
-						std::cmp::Ordering::Less => {
-							let mut v = vec![String::new(); e_len - c_len];
-							v.append(&mut c);
-							c = v;
-						}
-						std::cmp::Ordering::Greater => {
-							let mut v = vec![String::new(); c_len - e_len];
-							v.append(&mut e);
-							e = v;
-						}
-						std::cmp::Ordering::Equal => {}
+				match c_len.cmp(&e_len) {
+					std::cmp::Ordering::Less => {
+						let mut v = vec![String::new(); e_len - c_len];
+						v.append(&mut c);
+						c = v;
 					}
+					std::cmp::Ordering::Greater => {
+						let mut v = vec![String::new(); c_len - e_len];
+						v.append(&mut e);
+						e = v;
+					}
+					std::cmp::Ordering::Equal => {}
+				}
 
-					c.into_iter().zip(e).map(|(c, e)| BilingualString::new(c, e)).collect()
-				})
-				.unwrap_or_default(),
+				c.into_iter().zip(e).map(|(c, e)| BilingualString::new(c, e)).collect()
+			}),
 			update_time: zh.update_time.unwrap_or_default(),
 		}
 	}
@@ -75,8 +71,7 @@ impl Warning {
 			pieces: zh
 				.details
 				.zip(en.details)
-				.map(|(c, e)| c.into_iter().zip(e).map(|(c, e)| Piece::new(c, e)).collect())
-				.unwrap_or_default(),
+				.map_or_default(|(c, e)| c.into_iter().zip(e).map(|(c, e)| Piece::new(c, e)).collect()),
 		}
 	}
 }

@@ -49,8 +49,7 @@ where
 			let db_name: String = sqlx::query("SELECT current_database()")
 				.fetch_one(&db.pool)
 				.await
-				.map(|row| row.try_get(0).unwrap_or_default())
-				.unwrap_or_default();
+				.map_or_default(|row| row.try_get(0).unwrap_or_default());
 			if !db_name.is_empty() {
 				log::info!("Connected to database {db_name}");
 			}

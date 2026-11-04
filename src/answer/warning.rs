@@ -38,7 +38,7 @@ async fn update(lang: &Lang, entry: AnswerEntry) -> AnswerEntry {
 		return AnswerEntry::new(vec![], DateTime::default());
 	}
 
-	let update_time = data.pieces.iter().max_by_key(|w| w.update_time).map(|w| w.update_time).unwrap_or_default();
+	let update_time = data.pieces.iter().max_by_key(|w| w.update_time).map_or_default(|w| w.update_time);
 
 	if entry.update_time >= update_time {
 		return entry;

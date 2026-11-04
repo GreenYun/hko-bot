@@ -88,8 +88,7 @@ impl Bulletin {
 			tropical_cyclone: zh
 				.tcmessage
 				.zip(en.tcmessage)
-				.map(|(c, e)| c.into_iter().zip(e).map(|(c, e)| BilingualString::new(c, e)).collect())
-				.unwrap_or_default(),
+				.map_or_default(|(c, e)| c.into_iter().zip(e).map(|(c, e)| BilingualString::new(c, e)).collect()),
 			rainstorm_reminder: {
 				zh.rainstorm_reminder
 					.and_then(|c| en.rainstorm_reminder.map(|e| BilingualString::new(c, e)))
@@ -98,8 +97,7 @@ impl Bulletin {
 			special_tips: zh
 				.special_tips
 				.zip(en.special_tips)
-				.map(|(c, e)| c.into_iter().zip(e).map(|(c, e)| BilingualString::new(c, e)).collect())
-				.unwrap_or_default(),
+				.map_or_default(|(c, e)| c.into_iter().zip(e).map(|(c, e)| BilingualString::new(c, e)).collect()),
 			update_time: zh.update_time,
 		}
 	}
